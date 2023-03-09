@@ -1,23 +1,9 @@
-
-
-class Piece:
-    def __init__(self, p_type, color):
-        self.p_type = p_type
-        self.color = color
-        self.possible_move = []
-        self.price = 0
+import constant as c
 
 class Board:
-    def __init__(self, size = 8):
-        self._size = size
-        self.board = [['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-                      ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-                      [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-                      [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-                      [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-                      [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-                      ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-                      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']]
+    def __init__(self, board = c.board):
+        self.board = board
+        self._size = 8
         self.turn = 'white'
         self.move_history = []
         self.piece_pos = {
@@ -84,8 +70,9 @@ class Board:
         self.move_history.append(ret)
 
     def move(self, start, end):
-        # c1, r1 = self.board_to_array(start)
-        # c2, r2 = self.board_to_array(end)
+        if not (self.check_boundary(start) and self.check_boundary(end)):
+            print("wrong input")
+            return
         c1, r1 = start
         c2, r2 = end
         piece = self.board[c1][r1]
@@ -95,6 +82,9 @@ class Board:
         _check = False
         _mate = False
 
+        if start == end:
+            return
+
         if piece == ' ':
             print("No piece in start position.")
             return
@@ -103,13 +93,15 @@ class Board:
             print("Not your piece")
             return
 
-        if start == end:
+        if not self.check_legal_move(start, end):
+            print("it's legal move")
             return
 
         if self.board[c2][r2] != ' ':
             _take = True
 
         if piece.islower() == 'p' and (self.turn == 'white' and r2 == 0 or self.turn == 'black' and r2 == 7):
+            # promotion 종류 늘리기
             _promotion = 'q' if self.turn == 'white' else 'Q'
 
         self.array_to_board(start, end, _take, _promotion, _sameline, _check, _mate)
@@ -118,13 +110,71 @@ class Board:
         self.turn = 'white' if self.turn == 'black' else 'black'
         print(self)
 
+    def check_boundary(self, pos):
+        return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
+
+    def check_legal_move(self, start, end):
+        c1, r1 = start
+        c2, r2 = end
+        piece = self.board[c1][r1]
+        k = (c2, r2) in self.pawn_moves(start)
+
+        if piece.lower() == 'p':
+            return (c2, r2) in self.pawn_moves(start)
+
+        ## R B N Q K 추가
+
+    def pawn_moves(self, start):
+        c1, r1 = start
+        piece = self.board[c1][r1]
+        possible_moves = []
+
+        if piece.islower():
+            if c1 == 6:
+                if self.isEmptySpace((c1 - 1, r1)):
+                    possible_moves.append((c1 - 1, r1))
+                if self.isEmptySpace((c1 - 2, r1)):
+                    possible_moves.append((c1 - 2, r1))
+            else:
+                if self.isEmptySpace((c1 - 1, r1)):
+                    possible_moves.append((c1 - 1, r1))
+            if not self.isEmptySpace((c1 - 1, r1 - 1)) and self.isEnemy(start, (c1 - 1, r1 - 1)):
+                possible_moves.append((c1 - 1, r1 - 1))
+            if not self.isEmptySpace((c1 - 1, r1 + 1)) and self.isEnemy(start, (c1 - 1, r1 + 1)):
+                possible_moves.append((c1 - 1, r1 + 1))
+
+        else:
+            if c1 == 1:
+                if self.isEmptySpace((c1 + 1, r1)):
+                    possible_moves.append((c1 + 1, r1))
+                if self.isEmptySpace((c1 + 2, r1)):
+                    possible_moves.append((c1 + 2, r1))
+            if self.isEmptySpace((c1 + 1, r1)):
+                possible_moves.append((c1 + 1, r1))
+            if not self.isEmptySpace((c1 + 1, r1 - 1)) and self.isEnemy(start, (c1 + 1, r1 - 1)):
+                possible_moves.append((c1 + 1, r1 - 1))
+            if not self.isEmptySpace((c1 + 1, r1 + 1)) and self.isEnemy(start, (c1 + 1, r1 + 1)):
+                possible_moves.append((c1 + 1, r1 + 1))
+
+        return possible_moves
+
+    def isEmptySpace(self, pos):
+        return self.board[pos[0]][pos[1]] == ' '
+
+    def isEnemy(self, start, end):
+        c1, r1 = start
+        c2, r2 = end
+        return self.board[c1][r1].islower() ^ self.board[c2][r2].islower()
+
+
 
 if __name__ == '__main__':
     b = Board()
-    b.move((6,3), (4,3))
-    b.move((1,4), (3,4))
-    b.move((4,3), (3,4))
-    b.move((0,1), (2,2))
-    b.move((7,6), (5,5))
-    b.move((2,2), (3,4))
-    print(b.move_history)
+    print(b)
+    b.move((6,1), (4,1))
+    b.move((1,2), (3,2))
+    b.move((4,1), (2,1))
+    # b.move((0,1), (2,2))
+    # b.move((7,6), (5,5))
+    # b.move((2,2), (3,4))
+    # print(b.move_history)
