@@ -176,6 +176,20 @@ class Board:
 
         return possible_moves
 
+    def king_move(self, start):
+        c1, r1 = start
+        directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
+        possible_moves = []
+
+        for direction in directions:
+            c2 = c1 + direction[0]
+            r2 = r1 + direction[1]
+            pos = (c2, r2)
+            if self.isEmptySpace(pos):
+                possible_moves.append(pos)
+
+        return possible_moves
+
     def check_boundary(self, pos):
         return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
 
@@ -192,10 +206,8 @@ class Board:
 if __name__ == '__main__':
     b = Board()
     print(b)
-    b.move((7,1), (5,1))
-    b.move((1,2), (3,2))
-    b.move((6,2), (4,2))
-    # b.move((0,1), (2,2))
-    # b.move((7,6), (5,5))
-    # b.move((2,2), (3,4))
+    b.move((6,3),(5,3))
+    b.move((1,3),(2,3))
+    b.move((7,4), (6,3))
+    b.move((0,4), (1,3))
     # print(b.move_history)
