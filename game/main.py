@@ -110,17 +110,21 @@ class Board:
         self.turn = 'white' if self.turn == 'black' else 'black'
         print(self)
 
-    def check_boundary(self, pos):
-        return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
-
     def check_legal_move(self, start, end):
         c1, r1 = start
         c2, r2 = end
-        piece = self.board[c1][r1]
+        piece = self.board[c1][r1].lower()
         k = (c2, r2) in self.pawn_moves(start)
 
-        if piece.lower() == 'p':
+        if piece== 'p':
             return (c2, r2) in self.pawn_moves(start)
+
+        elif piece == 'n':
+            return (c2, r2) in self.knight_move(start)
+
+        else:
+            ## 나중에 False로 수정
+            return True
 
         ## R B N Q K 추가
 
@@ -133,8 +137,8 @@ class Board:
             if c1 == 6:
                 if self.isEmptySpace((c1 - 1, r1)):
                     possible_moves.append((c1 - 1, r1))
-                if self.isEmptySpace((c1 - 2, r1)):
-                    possible_moves.append((c1 - 2, r1))
+                    if self.isEmptySpace((c1 - 2, r1)):
+                        possible_moves.append((c1 - 2, r1))
             else:
                 if self.isEmptySpace((c1 - 1, r1)):
                     possible_moves.append((c1 - 1, r1))
@@ -158,8 +162,25 @@ class Board:
 
         return possible_moves
 
+    def knight_move(self, start):
+        c1, r1 = start
+        directions = [(2,1), (1,2), (-2,1), (-1,2), (2,-1), (1,-2), (-2,-1),(-1,-2)]
+        possible_moves = []
+
+        for direction in directions:
+            c2 = c1 + direction[0]
+            r2 = r1 + direction[1]
+            pos = (c2, r2)
+            if self.isEmptySpace(pos):
+                possible_moves.append(pos)
+
+        return possible_moves
+
+    def check_boundary(self, pos):
+        return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
+
     def isEmptySpace(self, pos):
-        return self.board[pos[0]][pos[1]] == ' '
+        return self.check_boundary(pos) and self.board[pos[0]][pos[1]] == ' '
 
     def isEnemy(self, start, end):
         c1, r1 = start
@@ -171,9 +192,9 @@ class Board:
 if __name__ == '__main__':
     b = Board()
     print(b)
-    b.move((6,1), (4,1))
+    b.move((7,1), (5,1))
     b.move((1,2), (3,2))
-    b.move((4,1), (2,1))
+    b.move((6,2), (4,2))
     # b.move((0,1), (2,2))
     # b.move((7,6), (5,5))
     # b.move((2,2), (3,4))
