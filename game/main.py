@@ -114,7 +114,6 @@ class Board:
         c1, r1 = start
         c2, r2 = end
         piece = self.board[c1][r1].lower()
-        k = (c2, r2) in self.pawn_moves(start)
 
         if piece== 'p':
             return (c2, r2) in self.pawn_moves(start)
@@ -122,9 +121,20 @@ class Board:
         elif piece == 'n':
             return (c2, r2) in self.knight_move(start)
 
+        elif piece == 'k':
+            return (c2, r2) in self.king_move(start)
+
+        elif piece == 'b':
+            return (c2, r2) in self.bishop_move(start)
+
+        elif piece == 'r':
+            return (c2, r2) in self.rook_move(start)
+
+        elif piece == 'q':
+            return (c2, r2) in self.queen_move(start)
+
         else:
-            ## 나중에 False로 수정
-            return True
+            return False
 
         ## R B N Q K 추가
 
@@ -171,7 +181,7 @@ class Board:
             c2 = c1 + direction[0]
             r2 = r1 + direction[1]
             pos = (c2, r2)
-            if self.isEmptySpace(pos):
+            if self.isEmptySpace(pos) or self.isEnemy(start, pos):
                 possible_moves.append(pos)
 
         return possible_moves
@@ -185,10 +195,64 @@ class Board:
             c2 = c1 + direction[0]
             r2 = r1 + direction[1]
             pos = (c2, r2)
-            if self.isEmptySpace(pos):
+            if self.isEmptySpace(pos) or self.isEnemy(start, pos):
                 possible_moves.append(pos)
 
         return possible_moves
+
+    def bishop_move(self, start):
+        c1, r1 = start
+        directions = [(1,1), (1,-1), (-1,1), (-1,-1)]
+        possible_moves = []
+
+        for direction in directions:
+            current = (c1 + direction[0], r1 + direction[1])
+
+            while self.check_boundary(current):
+                if self.isEmptySpace(current) or self.isEnemy(start, current):
+                    possible_moves.append(current)
+                    current = (current[0] + direction[0], current[1] + direction[1])
+                else:
+                    break
+
+        return possible_moves
+
+    def rook_move(self, start):
+        c1, r1 = start
+        directions = [(1,0), (0,1), (-1,0), (0,-1)]
+        possible_moves = []
+
+        for direction in directions:
+            current = (c1 + direction[0], r1 + direction[1])
+
+            while self.check_boundary(current):
+                if self.isEmptySpace(current) or self.isEnemy(start, current):
+                    possible_moves.append(current)
+                    current = (current[0] + direction[0], current[1] + direction[1])
+                else:
+                    break
+
+        return possible_moves
+
+    def queen_move(self, start):
+        c1, r1 = start
+        directions = [(1,0), (0,1), (-1,0), (0,-1), (1,1), (1,-1), (-1,1), (-1,-1)]
+        possible_moves = []
+
+        for direction in directions:
+            current = (c1 + direction[0], r1 + direction[1])
+
+            while self.check_boundary(current):
+                if self.isEmptySpace(current) or self.isEnemy(start, current):
+                    possible_moves.append(current)
+                    current = (current[0] + direction[0], current[1] + direction[1])
+                else:
+                    break
+
+        print(possible_moves)
+
+        return possible_moves
+
 
     def check_boundary(self, pos):
         return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
@@ -199,15 +263,25 @@ class Board:
     def isEnemy(self, start, end):
         c1, r1 = start
         c2, r2 = end
-        return self.board[c1][r1].islower() ^ self.board[c2][r2].islower()
+        return self.check_boundary(end) and self.board[c1][r1].islower() ^ self.board[c2][r2].islower()
 
 
 
 if __name__ == '__main__':
     b = Board()
-    print(b)
-    b.move((6,3),(5,3))
-    b.move((1,3),(2,3))
-    b.move((7,4), (6,3))
-    b.move((0,4), (1,3))
-    # print(b.move_history)
+    while True:
+        _s = tuple(map(lambda x: int(x), input("start:")))
+        _e = tuple(map(lambda x: int(x), input("end:")))
+        _wrong_input = False
+
+        if len(_s) != 2 and len(_e) != 2:
+            print("잘못된 입력")
+            continue
+
+        if _wrong_input:
+            continue
+
+        b.move(_s, _e)
+        print(b.move_history)
+    # b.move((1,5),(2,5))
+
