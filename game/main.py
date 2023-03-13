@@ -50,7 +50,7 @@ class Board:
                 ret += self.col_process(c2)
 
             if promotion != '':
-                ret += '=Q'
+                ret += '=' + promotion.upper()
 
         else:
             ret = piece
@@ -100,15 +100,23 @@ class Board:
         if self.board[c2][r2] != ' ':
             _take = True
 
-        if piece.islower() == 'p' and (self.turn == 'white' and r2 == 0 or self.turn == 'black' and r2 == 7):
-            # promotion 종류 늘리기
-            _promotion = 'q' if self.turn == 'white' else 'Q'
+        if piece.lower() == 'p' and (self.turn == 'white' and c2 == 0 or self.turn == 'black' and c2 == 7):
+            prom = input("promotion to: ").lower()
+            while not self.check_promotion(prom):
+                print("wrong input")
+                prom = input("promotion to: ").lower()
+            _promotion = prom
+            piece = prom if self.turn == 'white' else prom.upper()
 
         self.array_to_board(start, end, _take, _promotion, _sameline, _check, _mate)
         self.board[c1][r1] = ' '
         self.board[c2][r2] = piece
         self.turn = 'white' if self.turn == 'black' else 'black'
         print(self)
+
+    @staticmethod
+    def check_promotion(prom):
+        return prom == 'r' or prom == 'q' or prom == 'b' or prom == 'n'
 
     def check_legal_move(self, start, end):
         c1, r1 = start
@@ -249,8 +257,6 @@ class Board:
                 else:
                     break
 
-        print(possible_moves)
-
         return possible_moves
 
 
@@ -268,7 +274,17 @@ class Board:
 
 
 if __name__ == '__main__':
-    b = Board()
+    _board = [['R', ' ', 'B', 'Q', 'K', 'B', 'N', 'R'],
+              [' ', 'p', ' ', 'P', 'P', 'P', 'P', 'P'],
+              ['N', ' ', 'P', ' ', ' ', ' ', ' ', ' '],
+              ['P', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+              [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+              [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+              ['p', ' ', 'p', 'p', 'p', 'p', 'p', 'p'],
+              ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+              ]
+    b = Board(_board)
+    print(b)
     while True:
         _s = tuple(map(lambda x: int(x), input("start:")))
         _e = tuple(map(lambda x: int(x), input("end:")))
