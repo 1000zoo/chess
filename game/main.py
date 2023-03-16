@@ -6,7 +6,8 @@ class Board:
         self._size = 8
         self.turn = 'white'
         self.move_history = []
-        self.piece_pos = {
+        self.current_pos = {}
+        self.legal_moves = {
             'r' : [],
             'n' : [],
             'b' : [],
@@ -14,6 +15,7 @@ class Board:
             'k' : [],
             'p' : [],
         }
+        self.set_current_pos()
 
     def __str__(self):
         board_str = '-----------------\n'
@@ -36,6 +38,20 @@ class Board:
     @staticmethod
     def row_process(r):
         return str(chr(r + ord('a')))
+
+    def reset_current_pos(self):
+        self.current_pos = {'white': {'p': [],'n': [],'b': [],'r': [],'q': [],'k': []},
+                            'black': {'p': [],'n': [],'b': [],'r': [],'q': [],'k': []}}
+
+    def set_current_pos(self):
+        self.reset_current_pos()
+        for i, col in enumerate(self.board):
+            for j, row in enumerate(col):
+                piece = row
+                if piece != ' ':
+                    turn = 'white' if piece.islower() else 'black'
+                    self.current_pos[turn][piece.lower()].append((i, j))
+
 
     def array_to_board(self, start, end, take, promotion, sameline, check, mate):
         c1, r1 = start
@@ -111,6 +127,7 @@ class Board:
         self.array_to_board(start, end, _take, _promotion, _sameline, _check, _mate)
         self.board[c1][r1] = ' '
         self.board[c2][r2] = piece
+        self.set_current_pos()
         self.turn = 'white' if self.turn == 'black' else 'black'
         print(self)
 
@@ -127,24 +144,23 @@ class Board:
             return (c2, r2) in self.pawn_moves(start)
 
         elif piece == 'n':
-            return (c2, r2) in self.knight_move(start)
+            return (c2, r2) in self.knight_moves(start)
 
         elif piece == 'k':
-            return (c2, r2) in self.king_move(start)
+            return (c2, r2) in self.king_moves(start)
 
         elif piece == 'b':
-            return (c2, r2) in self.bishop_move(start)
+            return (c2, r2) in self.bishop_moves(start)
 
         elif piece == 'r':
-            return (c2, r2) in self.rook_move(start)
+            return (c2, r2) in self.rook_moves(start)
 
         elif piece == 'q':
-            return (c2, r2) in self.queen_move(start)
+            return (c2, r2) in self.queen_moves(start)
 
         else:
             return False
 
-        ## R B N Q K 추가
 
     def pawn_moves(self, start):
         c1, r1 = start
@@ -180,7 +196,7 @@ class Board:
 
         return possible_moves
 
-    def knight_move(self, start):
+    def knight_moves(self, start):
         c1, r1 = start
         directions = [(2,1), (1,2), (-2,1), (-1,2), (2,-1), (1,-2), (-2,-1),(-1,-2)]
         possible_moves = []
@@ -194,7 +210,7 @@ class Board:
 
         return possible_moves
 
-    def king_move(self, start):
+    def king_moves(self, start):
         c1, r1 = start
         directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
         possible_moves = []
@@ -208,7 +224,7 @@ class Board:
 
         return possible_moves
 
-    def bishop_move(self, start):
+    def bishop_moves(self, start):
         c1, r1 = start
         directions = [(1,1), (1,-1), (-1,1), (-1,-1)]
         possible_moves = []
@@ -225,7 +241,7 @@ class Board:
 
         return possible_moves
 
-    def rook_move(self, start):
+    def rook_moves(self, start):
         c1, r1 = start
         directions = [(1,0), (0,1), (-1,0), (0,-1)]
         possible_moves = []
@@ -242,7 +258,7 @@ class Board:
 
         return possible_moves
 
-    def queen_move(self, start):
+    def queen_moves(self, start):
         c1, r1 = start
         directions = [(1,0), (0,1), (-1,0), (0,-1), (1,1), (1,-1), (-1,1), (-1,-1)]
         possible_moves = []
@@ -258,6 +274,15 @@ class Board:
                     break
 
         return possible_moves
+
+    def get_king_pos(self, white):
+        _king = 'k' if white else 'K'
+
+        for col in self.board:
+            for row in col:
+                if row == _king:
+                    return col, row
+        return None
 
 
     def check_boundary(self, pos):
@@ -298,6 +323,8 @@ if __name__ == '__main__':
             continue
 
         b.move(_s, _e)
-        print(b.move_history)
+        for k in b.current_pos:
+            print(b.current_pos[k])
+
     # b.move((1,5),(2,5))
 
