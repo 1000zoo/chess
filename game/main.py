@@ -1,10 +1,10 @@
 import constant as c
 
 class Board:
-    def __init__(self, board = c.board):
+    def __init__(self, board = c.board, turn = 'white'):
         self.board = board
         self._size = 8
-        self.turn = 'white'
+        self.turn = turn
         self.move_history = []
         self.current_pos = {}
         self.legal_moves = {
@@ -109,9 +109,21 @@ class Board:
             print("Not your piece")
             return
 
-        if not self.check_legal_move(start, end):
+        if not self.is_legal_move(start, end):
             print("it's legal move")
             return
+
+        ## 체크인지 확인하기 위해 일시적으로 말 이동
+        self.board[c1][r1] = ' '
+        self.board[c2][r2] = piece
+        if not self.is_king_safe(self.turn):
+            print("King is not safe")
+            self.board[c1][r1] = piece
+            self.board[c2][r2] = ' '
+            return
+
+        self.board[c1][r1] = piece
+        self.board[c2][r2] = ' '
 
         if self.board[c2][r2] != ' ':
             _take = True
@@ -124,6 +136,8 @@ class Board:
             _promotion = prom
             piece = prom if self.turn == 'white' else prom.upper()
 
+        _check = not self.is_king_safe('black' if self.turn == 'white' else 'white')
+
         self.array_to_board(start, end, _take, _promotion, _sameline, _check, _mate)
         self.board[c1][r1] = ' '
         self.board[c2][r2] = piece
@@ -135,7 +149,54 @@ class Board:
     def check_promotion(prom):
         return prom == 'r' or prom == 'q' or prom == 'b' or prom == 'n'
 
-    def check_legal_move(self, start, end):
+    def is_king_safe(self, color):
+        k_col, k_row = self.current_pos[color]['k'][0]
+        pieces = {
+            'b' : c.bishop_directions,
+            'r' : c.rook_directions,
+            'q' : c.queen_directions
+        }
+        ## 폰의 경우
+        pawn_case = [(-1, 1), (-1, -1)] if color == 'white' else [(1, -1), (1, 1)]
+
+        opp = 'P' if color == 'white' else 'p'
+        for move in pawn_case:
+            ct, rt = k_col + move[0], k_row + move[1]
+            if not self.check_boundary((ct, rt)):
+                continue
+
+            if self.board[ct][rt] == opp:
+                return False
+
+        ## 나이트의 경우
+        opp = 'N' if color == 'white' else 'n'
+        for move in c.knight_directions:
+            ct, rt = k_col + move[0], k_row + move[1]
+            if not self.check_boundary((ct, rt)):
+                continue
+
+            if self.board[ct][rt] == opp:
+                return False
+
+
+        for piece in pieces:
+            opp = piece.upper() if color == 'white' else piece
+
+            for direction in pieces[piece]:
+                ct, rt = k_col + direction[0], k_row + direction[1]
+
+                while self.check_boundary((ct, rt)):
+                    if self.board[ct][rt] == opp:
+                        return False
+                    if not self.isEmptySpace((ct, rt)):
+                        break
+                    ct, rt = ct + direction[0], rt + direction[1]
+
+        return True
+
+
+
+    def is_legal_move(self, start, end):
         c1, r1 = start
         c2, r2 = end
         piece = self.board[c1][r1].lower()
@@ -198,21 +259,7 @@ class Board:
 
     def knight_moves(self, start):
         c1, r1 = start
-        directions = [(2,1), (1,2), (-2,1), (-1,2), (2,-1), (1,-2), (-2,-1),(-1,-2)]
-        possible_moves = []
-
-        for direction in directions:
-            c2 = c1 + direction[0]
-            r2 = r1 + direction[1]
-            pos = (c2, r2)
-            if self.isEmptySpace(pos) or self.isEnemy(start, pos):
-                possible_moves.append(pos)
-
-        return possible_moves
-
-    def king_moves(self, start):
-        c1, r1 = start
-        directions = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
+        directions = c.knight_directions
         possible_moves = []
 
         for direction in directions:
@@ -226,7 +273,7 @@ class Board:
 
     def bishop_moves(self, start):
         c1, r1 = start
-        directions = [(1,1), (1,-1), (-1,1), (-1,-1)]
+        directions = c.bishop_directions
         possible_moves = []
 
         for direction in directions:
@@ -243,7 +290,7 @@ class Board:
 
     def rook_moves(self, start):
         c1, r1 = start
-        directions = [(1,0), (0,1), (-1,0), (0,-1)]
+        directions = c.rook_directions
         possible_moves = []
 
         for direction in directions:
@@ -260,7 +307,7 @@ class Board:
 
     def queen_moves(self, start):
         c1, r1 = start
-        directions = [(1,0), (0,1), (-1,0), (0,-1), (1,1), (1,-1), (-1,1), (-1,-1)]
+        directions = c.queen_directions
         possible_moves = []
 
         for direction in directions:
@@ -275,15 +322,19 @@ class Board:
 
         return possible_moves
 
-    def get_king_pos(self, white):
-        _king = 'k' if white else 'K'
+    def king_moves(self, start):
+        c1, r1 = start
+        directions = c.king_directions
+        possible_moves = []
 
-        for col in self.board:
-            for row in col:
-                if row == _king:
-                    return col, row
-        return None
+        for direction in directions:
+            c2 = c1 + direction[0]
+            r2 = r1 + direction[1]
+            pos = (c2, r2)
+            if self.isEmptySpace(pos) or self.isEnemy(start, pos):
+                possible_moves.append(pos)
 
+        return possible_moves
 
     def check_boundary(self, pos):
         return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
@@ -299,16 +350,16 @@ class Board:
 
 
 if __name__ == '__main__':
-    _board = [['R', ' ', 'B', 'Q', 'K', 'B', 'N', 'R'],
-              [' ', 'p', ' ', 'P', 'P', 'P', 'P', 'P'],
-              ['N', ' ', 'P', ' ', ' ', ' ', ' ', ' '],
+    _board = [['r', ' ', ' ', 'Q', 'K', 'B', 'N', 'R'],
+              [' ', ' ', ' ', 'P', 'P', 'P', 'P', 'P'],
+              [' ', ' ', 'P', ' ', ' ', ' ', ' ', ' '],
               ['P', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-              [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+              [' ', 'N', ' ', ' ', ' ', ' ', ' ', ' '],
               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
               ['p', ' ', 'p', 'p', 'p', 'p', 'p', 'p'],
               ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
               ]
-    b = Board(_board)
+    b = Board(_board, turn='black')
     print(b)
     while True:
         _s = tuple(map(lambda x: int(x), input("start:")))
@@ -323,8 +374,7 @@ if __name__ == '__main__':
             continue
 
         b.move(_s, _e)
-        for k in b.current_pos:
-            print(b.current_pos[k])
+        print(b.move_history)
 
     # b.move((1,5),(2,5))
 
