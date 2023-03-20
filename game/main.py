@@ -3,7 +3,7 @@ import constant as c
 class Board:
     def __init__(self, board = c.board, turn = 'white'):
         self.board = board
-        self._size = 8
+        self._size = len(board)
         self.turn = turn
         self.move_history = []
         self.current_pos = {}
@@ -188,7 +188,7 @@ class Board:
                 while self.check_boundary((ct, rt)):
                     if self.board[ct][rt] == opp:
                         return False
-                    if not self.isEmptySpace((ct, rt)):
+                    if not self.is_empty_space((ct, rt)):
                         break
                     ct, rt = ct + direction[0], rt + direction[1]
 
@@ -230,29 +230,29 @@ class Board:
 
         if piece.islower():
             if c1 == 6:
-                if self.isEmptySpace((c1 - 1, r1)):
+                if self.is_empty_space((c1 - 1, r1)):
                     possible_moves.append((c1 - 1, r1))
-                    if self.isEmptySpace((c1 - 2, r1)):
+                    if self.is_empty_space((c1 - 2, r1)):
                         possible_moves.append((c1 - 2, r1))
             else:
-                if self.isEmptySpace((c1 - 1, r1)):
+                if self.is_empty_space((c1 - 1, r1)):
                     possible_moves.append((c1 - 1, r1))
-            if not self.isEmptySpace((c1 - 1, r1 - 1)) and self.isEnemy(start, (c1 - 1, r1 - 1)):
+            if not self.is_empty_space((c1 - 1, r1 - 1)) and self.is_enemy(start, (c1 - 1, r1 - 1)):
                 possible_moves.append((c1 - 1, r1 - 1))
-            if not self.isEmptySpace((c1 - 1, r1 + 1)) and self.isEnemy(start, (c1 - 1, r1 + 1)):
+            if not self.is_empty_space((c1 - 1, r1 + 1)) and self.is_enemy(start, (c1 - 1, r1 + 1)):
                 possible_moves.append((c1 - 1, r1 + 1))
 
         else:
             if c1 == 1:
-                if self.isEmptySpace((c1 + 1, r1)):
+                if self.is_empty_space((c1 + 1, r1)):
                     possible_moves.append((c1 + 1, r1))
-                if self.isEmptySpace((c1 + 2, r1)):
+                if self.is_empty_space((c1 + 2, r1)):
                     possible_moves.append((c1 + 2, r1))
-            if self.isEmptySpace((c1 + 1, r1)):
+            if self.is_empty_space((c1 + 1, r1)):
                 possible_moves.append((c1 + 1, r1))
-            if not self.isEmptySpace((c1 + 1, r1 - 1)) and self.isEnemy(start, (c1 + 1, r1 - 1)):
+            if not self.is_empty_space((c1 + 1, r1 - 1)) and self.is_enemy(start, (c1 + 1, r1 - 1)):
                 possible_moves.append((c1 + 1, r1 - 1))
-            if not self.isEmptySpace((c1 + 1, r1 + 1)) and self.isEnemy(start, (c1 + 1, r1 + 1)):
+            if not self.is_empty_space((c1 + 1, r1 + 1)) and self.is_enemy(start, (c1 + 1, r1 + 1)):
                 possible_moves.append((c1 + 1, r1 + 1))
 
         return possible_moves
@@ -266,7 +266,7 @@ class Board:
             c2 = c1 + direction[0]
             r2 = r1 + direction[1]
             pos = (c2, r2)
-            if self.isEmptySpace(pos) or self.isEnemy(start, pos):
+            if self.is_empty_space(pos) or self.is_enemy(start, pos):
                 possible_moves.append(pos)
 
         return possible_moves
@@ -280,7 +280,7 @@ class Board:
             current = (c1 + direction[0], r1 + direction[1])
 
             while self.check_boundary(current):
-                if self.isEmptySpace(current) or self.isEnemy(start, current):
+                if self.is_empty_space(current) or self.is_enemy(start, current):
                     possible_moves.append(current)
                     current = (current[0] + direction[0], current[1] + direction[1])
                 else:
@@ -297,7 +297,7 @@ class Board:
             current = (c1 + direction[0], r1 + direction[1])
 
             while self.check_boundary(current):
-                if self.isEmptySpace(current) or self.isEnemy(start, current):
+                if self.is_empty_space(current) or self.is_enemy(start, current):
                     possible_moves.append(current)
                     current = (current[0] + direction[0], current[1] + direction[1])
                 else:
@@ -314,7 +314,7 @@ class Board:
             current = (c1 + direction[0], r1 + direction[1])
 
             while self.check_boundary(current):
-                if self.isEmptySpace(current) or self.isEnemy(start, current):
+                if self.is_empty_space(current) or self.is_enemy(start, current):
                     possible_moves.append(current)
                     current = (current[0] + direction[0], current[1] + direction[1])
                 else:
@@ -331,7 +331,7 @@ class Board:
             c2 = c1 + direction[0]
             r2 = r1 + direction[1]
             pos = (c2, r2)
-            if self.isEmptySpace(pos) or self.isEnemy(start, pos):
+            if self.is_empty_space(pos) or self.is_enemy(start, pos):
                 possible_moves.append(pos)
 
         return possible_moves
@@ -339,10 +339,10 @@ class Board:
     def check_boundary(self, pos):
         return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
 
-    def isEmptySpace(self, pos):
+    def is_empty_space(self, pos):
         return self.check_boundary(pos) and self.board[pos[0]][pos[1]] == ' '
 
-    def isEnemy(self, start, end):
+    def is_enemy(self, start, end):
         c1, r1 = start
         c2, r2 = end
         return self.check_boundary(end) and self.board[c1][r1].islower() ^ self.board[c2][r2].islower()
