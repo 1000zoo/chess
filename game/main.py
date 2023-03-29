@@ -228,20 +228,29 @@ class Board:
         piece = self.board[c1][r1]
         possible_moves = []
 
+        # 백색
         if piece.islower():
+            # 첫줄에 있을 때
             if c1 == 6:
+                # 바로 앞이 비었는 지 확인
                 if self.is_empty_space((c1 - 1, r1)):
                     possible_moves.append((c1 - 1, r1))
+                    # 바로 앞이 비었다면, 두 칸 앞도 비었는 지 확인
                     if self.is_empty_space((c1 - 2, r1)):
                         possible_moves.append((c1 - 2, r1))
+
+            # 첫줄이 아닐 때
             else:
                 if self.is_empty_space((c1 - 1, r1)):
                     possible_moves.append((c1 - 1, r1))
+
+            # 대각선에 적이 있을 때
             if not self.is_empty_space((c1 - 1, r1 - 1)) and self.is_enemy(start, (c1 - 1, r1 - 1)):
                 possible_moves.append((c1 - 1, r1 - 1))
             if not self.is_empty_space((c1 - 1, r1 + 1)) and self.is_enemy(start, (c1 - 1, r1 + 1)):
                 possible_moves.append((c1 - 1, r1 + 1))
 
+        # 흑색
         else:
             if c1 == 1:
                 if self.is_empty_space((c1 + 1, r1)):
@@ -336,12 +345,15 @@ class Board:
 
         return possible_moves
 
+    # 인덱스 범위 확인
     def check_boundary(self, pos):
         return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
 
+    # 빈 칸인지 확인
     def is_empty_space(self, pos):
         return self.check_boundary(pos) and self.board[pos[0]][pos[1]] == ' '
 
+    # 해당 말이 적인지 확인
     def is_enemy(self, start, end):
         c1, r1 = start
         c2, r2 = end
