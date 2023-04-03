@@ -3,7 +3,7 @@ import constant as c
 class Board:
     def __init__(self, board = c.board, turn = 'white'):
         self.board = board
-        self._size = len(board)
+        self.size = len(board)
         self.turn = turn
         self.move_history = []
         self.current_pos = {}
@@ -16,6 +16,7 @@ class Board:
             'p' : [],
         }
         self.set_current_pos()
+        self.pre_move = None
 
     def __str__(self):
         board_str = '-----------------\n'
@@ -29,11 +30,11 @@ class Board:
 
     def board_to_array(self, pos : str) -> tuple:
         row = ord(pos[0]) - ord('a')
-        col = self._size - int(pos[1])
+        col = self.size - int(pos[1])
         return col, row
 
     def col_process(self, c):
-        return str(self._size - c)
+        return str(self.size - c)
 
     @staticmethod
     def row_process(r):
@@ -113,8 +114,11 @@ class Board:
             print("it's legal move")
             return
 
+        ##TODO 앙파상의 경우 _take 처리
+
         ## 체크인지 확인하기 위해 일시적으로 말 이동
         self.board[c1][r1] = ' '
+        temp = self.board[c2][r2]
         self.board[c2][r2] = piece
         if not self.is_king_safe(self.turn):
             print("King is not safe")
@@ -123,7 +127,7 @@ class Board:
             return
 
         self.board[c1][r1] = piece
-        self.board[c2][r2] = ' '
+        self.board[c2][r2] = temp
 
         if self.board[c2][r2] != ' ':
             _take = True
@@ -141,6 +145,7 @@ class Board:
         self.array_to_board(start, end, _take, _promotion, _sameline, _check, _mate)
         self.board[c1][r1] = ' '
         self.board[c2][r2] = piece
+        self.pre_move = (start, end)
         self.set_current_pos()
         self.turn = 'white' if self.turn == 'black' else 'black'
         print(self)
@@ -226,44 +231,51 @@ class Board:
     def pawn_moves(self, start):
         c1, r1 = start
         piece = self.board[c1][r1]
+        size = self.size
         possible_moves = []
+        direction = -1 if piece.islower() else 1    # 색에 따라 달라지는 폰의 방향
+        two_step = piece.islower() and c1 == 6 or piece.isupper() and c1 == 1   # 첫 줄에 있는지 판단
 
-        # 백색
-        if piece.islower():
-            # 첫줄에 있을 때
-            if c1 == 6:
-                # 바로 앞이 비었는 지 확인
-                if self.is_empty_space((c1 - 1, r1)):
-                    possible_moves.append((c1 - 1, r1))
-                    # 바로 앞이 비었다면, 두 칸 앞도 비었는 지 확인
-                    if self.is_empty_space((c1 - 2, r1)):
-                        possible_moves.append((c1 - 2, r1))
+        def _enpassant():
+            if not self.pre_move:
+                return None
+            cases = [r1 - 1, r1 + 1]
+            ps, pe = self.pre_move
 
-            # 첫줄이 아닐 때
-            else:
-                if self.is_empty_space((c1 - 1, r1)):
-                    possible_moves.append((c1 - 1, r1))
+            for case in cases:
+                if case < 0 or case >= size:
+                    continue
+                if ps == (c1 + 2 * direction, case) and pe == (c1, case):
+                    return c1 + direction, case
 
-            # 대각선에 적이 있을 때
-            if not self.is_empty_space((c1 - 1, r1 - 1)) and self.is_enemy(start, (c1 - 1, r1 - 1)):
-                possible_moves.append((c1 - 1, r1 - 1))
-            if not self.is_empty_space((c1 - 1, r1 + 1)) and self.is_enemy(start, (c1 - 1, r1 + 1)):
-                possible_moves.append((c1 - 1, r1 + 1))
+            return None
 
-        # 흑색
+        # 첫줄에 있을 때
+        if two_step:
+            # 바로 앞이 비었는 지 확인
+            if self.is_empty_space((c1 + direction, r1)):
+                possible_moves.append((c1 + direction, r1))
+                # 바로 앞이 비었다면, 두 칸 앞도 비었는 지 확인
+                if self.is_empty_space((c1 + 2 * direction, r1)):
+                    possible_moves.append((c1 + 2 * direction, r1))
+
+        # 첫줄이 아닐 때
         else:
-            if c1 == 1:
-                if self.is_empty_space((c1 + 1, r1)):
-                    possible_moves.append((c1 + 1, r1))
-                if self.is_empty_space((c1 + 2, r1)):
-                    possible_moves.append((c1 + 2, r1))
-            if self.is_empty_space((c1 + 1, r1)):
-                possible_moves.append((c1 + 1, r1))
-            if not self.is_empty_space((c1 + 1, r1 - 1)) and self.is_enemy(start, (c1 + 1, r1 - 1)):
-                possible_moves.append((c1 + 1, r1 - 1))
-            if not self.is_empty_space((c1 + 1, r1 + 1)) and self.is_enemy(start, (c1 + 1, r1 + 1)):
-                possible_moves.append((c1 + 1, r1 + 1))
+            if self.is_empty_space((c1 + direction, r1)):
+                possible_moves.append((c1 + direction, r1))
 
+        # 대각선에 적이 있을 때
+        if not self.is_empty_space((c1 + direction, r1 - 1)) and self.is_enemy(start, (c1 + direction, r1 - 1)):
+            possible_moves.append((c1 + direction, r1 - 1))
+        if not self.is_empty_space((c1 + direction, r1 + 1)) and self.is_enemy(start, (c1 + direction, r1 + 1)):
+            possible_moves.append((c1 + direction, r1 + 1))
+
+        if _enpassant():
+            end = _enpassant()
+            self.board[end[0] - direction][end[1]] = ' '
+            possible_moves.append(_enpassant())
+
+        print(possible_moves)
         return possible_moves
 
     def knight_moves(self, start):
@@ -347,7 +359,7 @@ class Board:
 
     # 인덱스 범위 확인
     def check_boundary(self, pos):
-        return 0 <= pos[0] < self._size and 0 <= pos[1] < self._size
+        return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
 
     # 빈 칸인지 확인
     def is_empty_space(self, pos):
@@ -362,16 +374,17 @@ class Board:
 
 
 if __name__ == '__main__':
-    _board = [['r', ' ', ' ', 'Q', 'K', 'B', 'N', 'R'],
-              [' ', ' ', ' ', 'P', 'P', 'P', 'P', 'P'],
-              [' ', ' ', 'P', ' ', ' ', ' ', ' ', ' '],
-              ['P', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-              [' ', 'N', ' ', ' ', ' ', ' ', ' ', ' '],
-              [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-              ['p', ' ', 'p', 'p', 'p', 'p', 'p', 'p'],
-              ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
-              ]
-    b = Board(_board, turn='black')
+    # _board = [['r', ' ', ' ', 'Q', 'K', 'B', 'N', 'R'],
+    #           [' ', ' ', ' ', 'P', 'P', 'P', 'P', 'P'],
+    #           [' ', ' ', 'P', ' ', ' ', ' ', ' ', ' '],
+    #           ['P', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    #           [' ', 'N', ' ', ' ', ' ', ' ', ' ', ' '],
+    #           [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+    #           ['p', ' ', 'p', 'p', 'p', 'p', 'p', 'p'],
+    #           ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+    #           ]
+    # b = Board(_board, turn='black')
+    b = Board()
     print(b)
     while True:
         _s = tuple(map(lambda x: int(x), input("start:")))
