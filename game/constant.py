@@ -1,7 +1,7 @@
 from enum import Enum
 
 board = [['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-          ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+          ['P', 'P', ' ', ' ', ' ', 'p', 'P', 'P'],
           [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
           [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
           [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
@@ -9,14 +9,23 @@ board = [['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
           ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
           ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']]
 
+# board = ["R       ",
+#          " PPPPPPP",
+#          "        ",
+#          "        ",
+#          "        ",
+#          "        ",
+#          "pppppppp",
+#          "rnbqkbnr"
+#          ]
+
 classname_of_pieces = {
     'p' : 'Pawn',
     'n' : 'Knight',
     'b' : 'Bishop',
     'r' : 'Rook',
     'q' : 'Queen',
-    'k' : 'King',
-    'e' : 'Empty'
+    'k' : 'King'
 }
 
 class Player(Enum):
