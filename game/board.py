@@ -10,7 +10,6 @@ class Board:
         self.board = self.setting_board(board)
         self.turn = turn
 
-
     def __str__(self):
         board_str = '-----------------\n'
         for row in self.board:
@@ -20,7 +19,6 @@ class Board:
             board_str += '\n'
         board_str += '-----------------\n'
         return board_str
-
 
     def setting_board(self, board):
         temp = [[None for _ in range(self.size)] for _ in range(self.size)]
@@ -49,11 +47,14 @@ class Board:
     def is_within_bounds(self, pos):
         return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
 
-
+    ##TODO 움직이면 board 변경
     def move_piece(self, start, end):
         c1, r1 = start
         c2, r2 = end
         piece = self.board[c1][r1]
 
-b = Board()
-print(b)
+
+if __name__ == "__main__":
+    b = Board()
+    print(b)
+    print(b.board[0][4].get_legal_moves(b))
