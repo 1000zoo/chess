@@ -72,11 +72,17 @@ class Pawn(Piece):
     def __str__(self):
         return 'p' if self.player == Player.WHITE else 'P'
 
+    def _promotion(self, r):
+        return [('q', r), ('r', r), ('n', r), ('b', r)] if self.player == Player.WHITE else \
+                [('Q', r), ('R', r), ('N', r), ('B', r)]
+
     def get_legal_moves(self, b: Board):
         c1, r1 = self.pos
         legal_moves = []
         first = self.player == Player.WHITE and c1 == 6 \
                    or self.player ==Player.BLACK and c1 == 1
+        promotion_line = self.player == Player.WHITE and c1 == 1 \
+                         or self.player == Player.BLACK and c1 == 6
 
         if first:
             for d in range(1,3):
@@ -90,12 +96,18 @@ class Pawn(Piece):
             temp = (c1 + self.directions, r1)
             if b.is_empty(temp):
                 legal_moves.append(temp)
+                if promotion_line:
+                    legal_moves.extend(self._promotion(temp[1]))
+                else:
+                    legal_moves.append(temp)
 
         for d in [-1, 1]:
             temp = (c1 + self.directions, r1 + d)
             if b.is_within_bounds(temp) and b.is_enemy(temp, self.player):
-                legal_moves.append(temp)
-
+                if promotion_line:
+                    legal_moves.extend(self._promotion(temp[1]))
+                else:
+                    legal_moves.append(temp)
 
         return legal_moves
 
