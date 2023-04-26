@@ -30,9 +30,7 @@ class Piece:
         col, row = self.pos
         legal_moves = []
 
-        if isinstance(self, Pawn):
-            pass
-        elif isinstance(self, King) or isinstance(self, Knight):
+        if isinstance(self, King) or isinstance(self, Knight):
             for direction in self.directions:
                 new_col = col + direction[0]
                 new_row = row + direction[1]
@@ -44,7 +42,8 @@ class Piece:
                     legal_moves.append(new_pos)
                 elif b.is_enemy(self.pos, self.player):
                     legal_moves.append(new_pos)
-        else:
+
+        elif isinstance(self, Queen) or isinstance(self, Bishop) or isinstance(self, Rook):
             for direction in self.directions:
                 new_col = col + direction[0]
                 new_row = row + direction[1]
@@ -68,11 +67,37 @@ class Piece:
 
 class Pawn(Piece):
     def __init__(self, pos: tuple, player: Player):
-        super().__init__(pos, player, None)
+        super().__init__(pos, player, -1 if player == Player.WHITE else 1)
 
     def __str__(self):
         return 'p' if self.player == Player.WHITE else 'P'
 
+    def get_legal_moves(self, b: Board):
+        c1, r1 = self.pos
+        legal_moves = []
+        first = self.player == Player.WHITE and c1 == 6 \
+                   or self.player ==Player.BLACK and c1 == 1
+
+        if first:
+            for d in range(1,3):
+                temp = (c1 + self.directions * d, r1)
+                if b.is_empty(temp):
+                    legal_moves.append(temp)
+                else:
+                    break
+
+        else:
+            temp = (c1 + self.directions, r1)
+            if b.is_empty(temp):
+                legal_moves.append(temp)
+
+        for d in [-1, 1]:
+            temp = (c1 + self.directions, r1 + d)
+            if b.is_within_bounds(temp) and b.is_enemy(temp, self.player):
+                legal_moves.append(temp)
+
+
+        return legal_moves
 
 class Knight(Piece):
     def __init__(self, pos: tuple, player: Player):
