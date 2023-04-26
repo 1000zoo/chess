@@ -1,19 +1,21 @@
-import constant as c
-from constant import Player
+from constant import *
 from board import Board
 
 
 ##TODO 모든 움직임에 대해서 체크 확인
 
 def get_classname(piece):
-    return c.classname_of_pieces[piece.lower()]
+    return classname_of_pieces[piece.lower()]
 
+def can_castling():
+    pass
 
 class Piece:
     ##player: boolean -> true=white / false=black
-    def __init__(self, pos: tuple, player: Player):
+    def __init__(self, pos: tuple, player: Player, directions):
         self.pos = pos
         self.player = player
+        self.directions = directions
 
     def set_position(self, _pos: tuple):
         self.pos = _pos
@@ -24,167 +26,100 @@ class Piece:
     def get_player(self):
         return self.player
 
+    def get_legal_moves(self, b: Board):
+        col, row = self.pos
+        legal_moves = []
+
+        if isinstance(self, Pawn):
+            pass
+        elif isinstance(self, King) or isinstance(self, Knight):
+            for direction in self.directions:
+                new_col = col + direction[0]
+                new_row = row + direction[1]
+                new_pos = (new_col, new_row)
+                if not b.is_within_bounds(new_pos):
+                    continue
+
+                if b.is_empty(new_pos):
+                    legal_moves.append(new_pos)
+                elif b.is_enemy(self.pos, self.player):
+                    legal_moves.append(new_pos)
+        else:
+            for direction in self.directions:
+                new_col = col + direction[0]
+                new_row = row + direction[1]
+                new_pos = (new_col, new_row)
+
+                while b.is_within_bounds(new_pos):
+                    if b.is_empty(new_pos):
+                        legal_moves.append(new_pos)
+                        new_pos = (new_pos[0] + direction[0], new_pos[1] + direction[1])
+                    elif b.is_enemy(new_pos, self.player):
+                        legal_moves.append(new_pos)
+                        break
+                    else:
+                        break
+
+        return legal_moves
+
     def __str__(self):
         return f"Class Piece"
 
 
 class Pawn(Piece):
     def __init__(self, pos: tuple, player: Player):
-        super().__init__(pos, player)
+        super().__init__(pos, player, None)
 
     def __str__(self):
         return 'p' if self.player == Player.WHITE else 'P'
 
-    def get_legal_moves(self):
-        """
-        TODO 폰움직임 앙파상 프로모션 구현
-        """
-        pass
-
 
 class Knight(Piece):
     def __init__(self, pos: tuple, player: Player):
-        super().__init__(pos, player)
-        self.directions = c.knight_directions
+        super().__init__(pos, player, knight_directions)
 
     def __str__(self):
         return 'n' if self.player == Player.WHITE else 'N'
 
-    def get_legal_moves(self, board: Board):
-        col, row = self.pos
-        legal_moves = []  ##((col, row), take) => take: bool 잡았다 못잡았다.
-
-        for direction in self.directions:
-            new_col = col + direction[0]
-            new_row = row + direction[1]
-            new_pos = (new_col, new_row)
-            if not board.is_within_bounds(new_pos):
-                continue
-
-            if board.is_empty(new_pos):
-                legal_moves.append(new_pos)
-            elif board.is_enemy(self.pos, self.player):
-                legal_moves.append(new_pos)
-
-        return legal_moves
-
 
 class Bishop(Piece):
     def __init__(self, pos: tuple, player: Player):
-        super().__init__(pos, player)
-        self.directions = c.bishop_directions
+        super().__init__(pos, player, bishop_directions)
 
     def __str__(self):
         return 'b' if self.player == Player.WHITE else 'B'
 
-    def get_legal_moves(self, board: Board):
-        col, row = self.pos
-        legal_moves = []  ##((col, row), take) => take: bool 잡았다 못잡았다.
-
-        for direction in self.directions:
-            new_col = col + direction[0]
-            new_row = row + direction[1]
-            new_pos = (new_col, new_row)
-
-            while board.is_within_bounds(new_pos):
-                if board.is_empty(new_pos):
-                    legal_moves.append(new_pos)
-                    new_pos = (new_pos[0] + direction[0], new_pos[1] + direction[1])
-                elif board.is_enemy(new_pos, self.player):
-                    legal_moves.append(new_pos)
-                    break
-                else:
-                    break
-
-        return legal_moves
-
 
 class Rook(Piece):
     def __init__(self, pos: tuple, player: Player):
-        super().__init__(pos, player)
-        self.directions = c.rook_directions
+        super().__init__(pos, player, rook_directions)
         self.move = False  ## 캐슬링
 
     def __str__(self):
         return 'r' if self.player == Player.WHITE else 'R'
 
-    def get_legal_moves(self, board: Board):
-        col, row = self.pos
-        legal_moves = []  ##((col, row), take) => take: bool 잡았다 못잡았다.
-
-        for direction in self.directions:
-            new_col = col + direction[0]
-            new_row = row + direction[1]
-            new_pos = (new_col, new_row)
-
-            while board.is_within_bounds(new_pos):
-                if board.is_empty(new_pos):
-                    legal_moves.append(new_pos)
-                    new_pos = (new_pos[0] + direction[0], new_pos[1] + direction[1])
-                elif board.is_enemy(new_pos, self.player):
-                    legal_moves.append(new_pos)
-                    break
-                else:
-                    break
-
-        return legal_moves
-
 
 class Queen(Piece):
     def __init__(self, pos: tuple, player: Player):
-        super().__init__(pos, player)
-        self.directions = c.queen_directions
+        super().__init__(pos, player, queen_directions)
 
     def __str__(self):
         return 'q' if self.player == Player.WHITE else 'Q'
 
-    def get_legal_moves(self, board: Board):
-        col, row = self.pos
-        legal_moves = []  ##((col, row), take) => take: bool 잡았다 못잡았다.
 
-        for direction in self.directions:
-            new_col = col + direction[0]
-            new_row = row + direction[1]
-            new_pos = (new_col, new_row)
-
-            while board.is_within_bounds(new_pos):
-                if board.is_empty(new_pos):
-                    legal_moves.append(new_pos)
-                    new_pos = (new_pos[0] + direction[0], new_pos[1] + direction[1])
-                elif board.is_enemy(new_pos, self.player):
-                    legal_moves.append(new_pos)
-                    break
-                else:
-                    break
-
-        return legal_moves
-
-
-##TODO 캐슬링 구현
 class King(Piece):
     def __init__(self, pos: tuple, player: Player):
-        super().__init__(pos, player)
-        self.directions = c.king_directions
+        super().__init__(pos, player, king_directions)
         self.move = False  ## 캐슬링
 
     def __str__(self):
         return 'k' if self.player == Player.WHITE else 'K'
 
-    def get_legal_moves(self, board: Board):
+    def get_legal_moves(self, b: Board):
         col, row = self.pos
-        legal_moves = []  ##((col, row), take) => take: bool 잡았다 못잡았다.
+        legal_moves = super().get_legal_moves(b)
 
-        for direction in self.directions:
-            new_col = col + direction[0]
-            new_row = row + direction[1]
-            new_pos = (new_col, new_row)
-
-            if not board.is_within_bounds(new_pos):
-                continue
-
-            if board.is_empty(new_pos):
-                legal_moves.append(new_pos)
-            elif board.is_enemy(new_pos, self.player):
-                legal_moves.append(new_pos)
+        ##TODO 캐슬링 구현
+        can_castling()
 
         return legal_moves
