@@ -62,9 +62,9 @@ class Knight(Piece):
                 continue
 
             if board.is_empty(new_pos):
-                legal_moves.append((new_pos, False))
+                legal_moves.append(new_pos)
             elif board.is_enemy(self.pos, self.player):
-                legal_moves.append((new_pos, True))
+                legal_moves.append(new_pos)
 
         return legal_moves
 
@@ -88,10 +88,10 @@ class Bishop(Piece):
 
             while board.is_within_bounds(new_pos):
                 if board.is_empty(new_pos):
-                    legal_moves.append((new_pos, False))
+                    legal_moves.append(new_pos)
                     new_pos = (new_pos[0] + direction[0], new_pos[1] + direction[1])
                 elif board.is_enemy(new_pos, self.player):
-                    legal_moves.append((new_pos, True))
+                    legal_moves.append(new_pos)
                     break
                 else:
                     break
@@ -119,10 +119,10 @@ class Rook(Piece):
 
             while board.is_within_bounds(new_pos):
                 if board.is_empty(new_pos):
-                    legal_moves.append((new_pos, False))
+                    legal_moves.append(new_pos)
                     new_pos = (new_pos[0] + direction[0], new_pos[1] + direction[1])
                 elif board.is_enemy(new_pos, self.player):
-                    legal_moves.append((new_pos, True))
+                    legal_moves.append(new_pos)
                     break
                 else:
                     break
@@ -149,10 +149,10 @@ class Queen(Piece):
 
             while board.is_within_bounds(new_pos):
                 if board.is_empty(new_pos):
-                    legal_moves.append((new_pos, False))
+                    legal_moves.append(new_pos)
                     new_pos = (new_pos[0] + direction[0], new_pos[1] + direction[1])
                 elif board.is_enemy(new_pos, self.player):
-                    legal_moves.append((new_pos, True))
+                    legal_moves.append(new_pos)
                     break
                 else:
                     break
@@ -183,8 +183,8 @@ class King(Piece):
                 continue
 
             if board.is_empty(new_pos):
-                legal_moves.append((new_pos, False))
+                legal_moves.append(new_pos)
             elif board.is_enemy(new_pos, self.player):
-                legal_moves.append((new_pos, True))
+                legal_moves.append(new_pos)
 
         return legal_moves
