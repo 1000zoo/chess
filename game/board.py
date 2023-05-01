@@ -4,6 +4,7 @@ import piece as p
 
 class Board:
     def __init__(self, board=c.board, turn=Player.WHITE):
+        self.player = None
         self.size = len(board)
         self.board = self.setting_board(board)
         self.turn = turn
@@ -45,12 +46,29 @@ class Board:
     def is_within_bounds(self, pos):
         return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
 
+
     def move_piece(self, start, end):
         c1, r1 = start
         c2, r2 = end
-        piece = self.board[c1][r1]
+        piece = self.board[c1][r1] #이거는 초기에 말 확인하는거
 
+        if not self.is_occupied(self.board):
+            return
 
+        if not isinstance(piece, p.Piece):
+            print("not piece")
+            return
+
+        if piece.player != self.turn:
+            return
+
+        if end not in piece.get_legal_moves(self):
+            return
+
+        self.board[c2][r2] = self.board[c1][r1]
+        self.board[c1][r1] = None
+
+        self.turn = Player.WHITE if self.player == Player.BLACK else Player.BLACK
 if __name__ == "__main__":
     b = Board()
     print(b)
