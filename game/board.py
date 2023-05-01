@@ -45,22 +45,51 @@ class Board:
         return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
 
 
-    def move_piece(self, start, end):
+    def move(self, start, end):
         c1, r1 = start
         c2, r2 = end
-        piece = self.board[c1][r1] #이거는 초기에 말 확인하는거
+        piece = self.board[c1][r1]
 
         if not self.is_occupied(start):
             print("아무것도 없는 칸")
             return
 
+        if piece.player != self.turn:
+            print("플레이어의 기물 X.")
+            return
+        if isinstance(piece, Pawn):
+            self.move_pawn(start, end)
+        else:
+            self.move_piece(start, end)
+
+        ## 폰 움직임 여기서 구현
+    def move_pawn(self, start, end):
+        """
+        여기서 어떤 기물로 프로모션 할 건지 선택
+        pseudo code:
+        if start == 마지막 한 칸 전:
+            input(프로모션 할 기물 입력 (QRBN)
+            board[end] = 프로모션 기물 (end)
+            board[start] = None
+
+        if 앙파상():
+            => get_legal_move 에서 앙파상 경우의 수를 확인한 뒤임
+            => 앙파상() 메소드는 별도로 생성해야댐
+            상대말 제거
+            말 이동
+
+        나머지 경우는 단순 이동
+        """
+        pass
+
+    def move_piece(self, start, end):
+        c1, r1 = start
+        c2, r2 = end
+        piece = self.board[c1][r1] #이거는 초기에 말 확인하는거
+
         ## piece != None 이라는 것을 편집기한테 알려주기위해서
         if not isinstance(piece, Piece):
             print("아무것도 없는 칸")
-            return
-
-        if piece.player != self.turn:
-            print("플레이어의 기물 X.")
             return
 
         if end not in piece.get_legal_moves(self):
