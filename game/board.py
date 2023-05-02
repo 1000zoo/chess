@@ -64,23 +64,6 @@ class Board:
 
         ## 폰 움직임 여기서 구현
     def move_pawn(self, start, end):
-        """
-        여기서 어떤 기물로 프로모션 할 건지 선택
-        pseudo code:
-        if start == 마지막 한 칸 전:
-            input(프로모션 할 기물 입력 (QRBN)
-            board[end] = 프로모션 기물 (end)
-            board[start] = None
-
-        if 앙파상():
-            => get_legal_move 에서 앙파상 경우의 수를 확인한 뒤임
-            => 앙파상() 메소드는 별도로 생성해야댐
-            상대말 제거
-            말 이동
-
-        나머지 경우는 단순 이동
-        """
-
         c1, r1 = start
         c2, r2 = end
         piece = self.board[c1][r1]
@@ -145,35 +128,35 @@ class Board:
 
         self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
-def pre_check(self, start):
-    c1, r1 = start
-    ini_piece = self.board[c1][r1]
-    k_col, k_row = (1,2)
-    self.board[c1][r1]=' '
+    def pre_check(self, start):
+        c1, r1 = start
+        ini_piece = self.board[c1][r1]
+        k_col, k_row = (1,2)
+        self.board[c1][r1]=' '
 
-    pieces = {
-        'b': bishop_directions,
-        'r': rook_directions,
-        'q': queen_directions
-    }
+        pieces = {
+            'b': bishop_directions,
+            'r': rook_directions,
+            'q': queen_directions
+        }
 
-    for piece in pieces:
-        temp = piece.upper() if self.turn == Player.BLACK else piece
+        for piece in pieces:
+            temp = piece.upper() if self.turn == Player.BLACK else piece
 
-        for direction in pieces[piece]:
-            ct, rt = k_col + direction[0], k_row + direction[1]
+            for direction in pieces[piece]:
+                ct, rt = k_col + direction[0], k_row + direction[1]
 
-            while self.check_boudary((ct, rt)):
-                if self.board[ct][rt] == temp:
-                    self.board[c1][r1] = ini_piece
-                    return True
-                if not self.is_empty((ct, rt)):
-                    break
-                ct, rt = ct + direction[0], rt + direction[1]
+                while self.is_within_bounds((ct, rt)):
+                    if self.board[ct][rt] == temp:
+                        self.board[c1][r1] = ini_piece
+                        return True
+                    if not self.is_empty((ct, rt)):
+                        break
+                    ct, rt = ct + direction[0], rt + direction[1]
 
-    self.board[c1][r1] = ini_piece
+        self.board[c1][r1] = ini_piece
 
-    return False
+        return False
 
 def final_check(self, start, end):
     c1, r1 = start
@@ -225,7 +208,7 @@ def final_check(self, start, end):
         if last_piece.isupper():
             for direction in PAWN_directions:
                 ct, rt = opk_col + direction[0], opk_row + direction[1]
-                if not self.check_boudary((ct, rt)):
+                if not self.is_within_bounds((ct, rt)):
                     continue
 
                 if self.board[ct][rt] == opp_k:
@@ -235,7 +218,7 @@ def final_check(self, start, end):
         if last_piece.islower():
             for direction in pawn_directions:
                 ct, rt = opk_col + direction[0], opk_row + direction[1]
-                if not self.check_boudary((ct, rt)):
+                if not self.is_within_bounds((ct, rt)):
                     continue
 
                 if self.board[ct][rt] == opp_k:
@@ -248,7 +231,7 @@ def final_check(self, start, end):
         for direction in pieces[piece]:
             ct, rt = k_col + direction[0], k_row + direction[1]
 
-            while self.check_boudary((ct, rt)):
+            while self.is_within_bounds((ct, rt)):
                 if self.board[ct][rt] == temp:
                     self.board[c1][r1] = ini_piece
                     return True
