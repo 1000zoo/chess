@@ -240,16 +240,6 @@ class Pawn(Piece):
                 else:
                     legal_moves.append(temp)
 
-        # ## 앙파상
-        # if b.previous_move is not None:
-        #     prev_piece, prev_move = b.previous_move
-        #     if isinstance(prev_piece, Pawn):
-        #         prev_c, prev_r = prev_move
-        #         if prev_c == c1 and abs(prev_r - r1) == 1:
-        #             legal_moves.append((c1 + self.directions, prev_r))
-        #             # move에 앙파상으로 잡았다는 것을 어떻게 알릴 것인지
-
-
         if self.enpassant(b):
             _, enpassant_end = self.enpassant(b)
             legal_moves.append(enpassant_end)
