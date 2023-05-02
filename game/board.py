@@ -145,7 +145,119 @@ class Board:
 
         self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
+def pre_check(self, start):
+    c1, r1 = start
+    ini_piece = self.board[c1][r1]
+    k_col, k_row = (1,2)
+    self.board[c1][r1]=' '
 
+    pieces = {
+        'b': bishop_directions,
+        'r': rook_directions,
+        'q': queen_directions
+    }
+
+    for piece in pieces:
+        temp = piece.upper() if self.turn == Player.BLACK else piece
+
+        for direction in pieces[piece]:
+            ct, rt = k_col + direction[0], k_row + direction[1]
+
+            while self.check_boudary((ct, rt)):
+                if self.board[ct][rt] == temp:
+                    self.board[c1][r1] = ini_piece
+                    return True
+                if not self.is_empty((ct, rt)):
+                    break
+                ct, rt = ct + direction[0], rt + direction[1]
+
+    self.board[c1][r1] = ini_piece
+
+    return False
+
+def final_check(self, start, end):
+    c1, r1 = start
+    c2, r2 = end
+    k_col, k_row = (1, 2)
+    opk_col, opk_row = ()
+    last_piece = self.board[c2][r2]
+    ini_piece = self.board[c1][r1]
+
+    self.board[c1][r1] = ' '
+
+    pieces = {
+        'b': bishop_directions,
+        'r': rook_directions,
+        'q': queen_directions,
+        'n': knight_directions
+    }
+
+    if last_piece == 'n' or last_piece == 'N':
+        opp_k = 'k' if last_piece.isupper() else 'K'
+        for direction in knight_directions:
+            ct, rt = opk_col + direction[0], opk_row + direction[1]
+            if not self.check_boundary((ct, rt)):
+                continue
+
+            if self.board[ct][rt] == opp_k:
+                self.board[c1][r1] = ini_piece
+                return True
+
+    if last_piece == 'Q' or last_piece == 'q'\
+        or last_piece == 'R' or last_piece == 'r' \
+            or last_piece == 'V' or last_piece == 'v':
+        opp_k = 'k' if last_piece.isupper() else 'K'
+        for direction in knight_directions:
+            ct, rt = opk_col + direction[0], opk_row + direction[1]
+            if not self.check_boundary((ct, rt)):
+                continue
+
+            if self.board[ct][rt] == opp_k:
+                self.board[c1][r1] = ini_piece
+                return True
+
+    if last_piece == 'p' or last_piece == 'P':
+        opp_k = 'k' if last_piece.isupper() else 'K'
+
+        pawn_directions = [(-1, -1), (-1, 1)]
+        PAWN_directions = [(1, 1), (1, -1)]
+
+        if last_piece.isupper():
+            for direction in PAWN_directions:
+                ct, rt = opk_col + direction[0], opk_row + direction[1]
+                if not self.check_boudary((ct, rt)):
+                    continue
+
+                if self.board[ct][rt] == opp_k:
+                    self.board[c1][r1] = ini_piece
+                    return True
+
+        if last_piece.islower():
+            for direction in pawn_directions:
+                ct, rt = opk_col + direction[0], opk_row + direction[1]
+                if not self.check_boudary((ct, rt)):
+                    continue
+
+                if self.board[ct][rt] == opp_k:
+                    self.board[c1][r1] = ini_piece
+                    return True
+
+    for piece in list(pieces.keys()[:-1]):
+        temp = piece.upper() if self.turn == Player.BLACK else piece
+
+        for direction in pieces[piece]:
+            ct, rt = k_col + direction[0], k_row + direction[1]
+
+            while self.check_boudary((ct, rt)):
+                if self.board[ct][rt] == temp:
+                    self.board[c1][r1] = ini_piece
+                    return True
+                if not self.is_empty((ct, rt)):
+                    break
+                ct, rt = ct + direction[0], rt + direction[1]
+
+    self.board[c1][r1] = ini_piece
+    return False
 
 def get_classname(piece):
     return classname_of_pieces[piece.lower()]
