@@ -80,7 +80,37 @@ class Board:
 
         나머지 경우는 단순 이동
         """
-        pass
+
+        c1, r1 = start
+        c2, r2 = end
+        piece = self.board[c1][r1]
+
+        if not isinstance(piece, Pawn):
+            print("error")
+            return
+
+        if end not in piece.get_legal_moves(self):
+            print("가능한 수 X")
+            return
+
+        if piece.enpassant(self):
+            _, taked_pos = piece.enpassant(self)
+            tc, tr = taked_pos
+            tc -= piece.directions
+
+            self.board[c2][r2] = self.board[c1][r1]
+            self.board[c1][r1] = None
+            self.board[tc][tr] = None
+
+        else:
+            self.board[c2][r2] = self.board[c1][r1]
+            self.board[c1][r1] = None
+
+        piece.set_position(end)
+        self.previous_move = (piece, end)
+
+        self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
+
 
     def move_piece(self, start, end):
         c1, r1 = start
@@ -99,6 +129,7 @@ class Board:
         self.board[c2][r2] = self.board[c1][r1]
         self.board[c1][r1] = None
         piece.set_position(end)
+        self.previous_move = (piece, end)
 
         self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
@@ -209,18 +240,35 @@ class Pawn(Piece):
                 else:
                     legal_moves.append(temp)
 
-        ## 앙파상
-        if b.previous_move is not None:
-            prev_piece, prev_move = b.previous_move
-            if isinstance(prev_piece, Pawn):
-                prev_c, prev_r = prev_move
-                if prev_c == c1 and abs(prev_r - r1) == 1:
-                    legal_moves.append((c1 + self.directions, prev_r))
-                    # move에 앙파상으로 잡았다는 것을 어떻게 알릴 것인지
+        # ## 앙파상
+        # if b.previous_move is not None:
+        #     prev_piece, prev_move = b.previous_move
+        #     if isinstance(prev_piece, Pawn):
+        #         prev_c, prev_r = prev_move
+        #         if prev_c == c1 and abs(prev_r - r1) == 1:
+        #             legal_moves.append((c1 + self.directions, prev_r))
+        #             # move에 앙파상으로 잡았다는 것을 어떻게 알릴 것인지
+
+
+        if self.enpassant(b):
+            _, enpassant_end = self.enpassant(b)
+            legal_moves.append(enpassant_end)
 
         print(legal_moves)
 
         return legal_moves
+
+    def enpassant(self, b: Board):
+        c, r = self.pos
+        if b.previous_move is not None:
+            prev_piece, prev_move = b.previous_move
+            if isinstance(prev_piece, Pawn):
+                prev_c, prev_r = prev_move
+                white = self.player == Player.WHITE
+                return (white and c == prev_c == 3) or (not white and c == prev_c == 4) \
+                        and abs(prev_r - r) == 1, (c + self.directions, prev_r)
+
+        return False
 
 class Knight(Piece):
     def __init__(self, pos: tuple, player: Player):
