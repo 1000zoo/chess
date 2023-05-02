@@ -93,6 +93,18 @@ class Board:
             print("가능한 수 X")
             return
 
+        if piece.is_promotion_line():
+            prom_val = c2
+            nc = 0 if self.turn == Player.WHITE else 7
+            ne = (nc, r2)
+            prom_piece = globals()[classname_of_pieces[prom_val]](ne, self.turn)
+
+            self.board[c1][r1] = None
+            self.board[nc][r2] = prom_piece
+            return
+
+
+
         if piece.enpassant(self):
             _, taked_pos = piece.enpassant(self)
             tc, tr = taked_pos
@@ -204,7 +216,7 @@ class Pawn(Piece):
     def __str__(self):
         return 'p' if self.player == Player.WHITE else 'P'
 
-    def _promotion(self, r):
+    def _get_promotion_cases(self, r):
         return [('q', r), ('r', r), ('n', r), ('b', r)] if self.player == Player.WHITE else \
                 [('Q', r), ('R', r), ('N', r), ('B', r)]
 
@@ -227,16 +239,16 @@ class Pawn(Piece):
         else:
             temp = (c1 + self.directions, r1)
             if b.is_empty(temp):
-                if promotion_line:
-                    legal_moves.extend(self._promotion(temp[1]))
+                if self.is_promotion_line():
+                    legal_moves.extend(self._get_promotion_cases(temp[1]))
                 else:
                     legal_moves.append(temp)
 
         for d in [-1, 1]:
             temp = (c1 + self.directions, r1 + d)
             if b.is_within_bounds(temp) and b.is_enemy(temp, self.player):
-                if promotion_line:
-                    legal_moves.extend(self._promotion(temp[1]))
+                if self.is_promotion_line():
+                    legal_moves.extend(self._get_promotion_cases(temp[1]))
                 else:
                     legal_moves.append(temp)
 
@@ -247,6 +259,11 @@ class Pawn(Piece):
         print(legal_moves)
 
         return legal_moves
+
+    def is_promotion_line(self):
+        c1, r1 = self.pos
+        return self.player == Player.WHITE and c1 == 1 \
+                         or self.player == Player.BLACK and c1 == 6
 
     def enpassant(self, b: Board):
         c, r = self.pos
