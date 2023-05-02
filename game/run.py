@@ -1,11 +1,15 @@
 from board import *
+from constant import Player
 
 if __name__ == '__main__':
-    b = Board()
+    b = Board(turn=Player.WHITE)
     print(b)
     while True:
         print(b.turn)
         _s = tuple(map(lambda x: int(x), input("start:")))
+        p = b.board[_s[0]][_s[1]]
+        if isinstance(p, Piece):
+            p.get_legal_moves(b)
         _e = tuple(map(lambda x: int(x), input("end:")))
         _wrong_input = False
 
@@ -16,5 +20,5 @@ if __name__ == '__main__':
         if _wrong_input:
             continue
 
-        b.move_piece(_s, _e)
+        b.move(_s, _e)
         print(b)
