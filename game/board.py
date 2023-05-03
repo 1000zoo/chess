@@ -31,6 +31,9 @@ class Board:
 
         return temp
 
+    def opp_color(self):
+        return Player.WHITE if self.player == Player.BLACK else Player.BLACK
+
     def is_enemy(self, pos, player) -> bool:
         if self.is_empty(pos):
             return False
@@ -188,7 +191,7 @@ class Board:
     def final_check(self, start, end):
         c1, r1 = start
         c2, r2 = end
-        _color = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
+        _color = self.opp_color()
         opk_col, opk_row = self.find_king(_color)
         last_piece = self.board[c2][r2]
 
