@@ -6,16 +6,34 @@ if __name__ == '__main__':
     print(b)
     while True:
         print(b.turn)
-        _s = tuple(map(lambda x: int(x), input("start:")))
+        try:
+            _s = tuple(map(lambda x: int(x), input("start:")))
+            if len(_s) != 2:
+                print("잘못된 입력입니다.")
+                continue
+
+        except ValueError as e:
+            print("잘못된 입력입니다.")
+            continue
+
         p = b.board[_s[0]][_s[1]]
-        print(p)
         if isinstance(p, Piece):
-            p.get_legal_moves(b)
+            if p.player != b.turn:
+                print("선택한 기물의 턴이 아닙니다.")
+                continue
+            print(p.get_legal_moves(b))
         else:
             print("빈 칸 입니다.")
             continue
+        try:
+            _e = tuple(map(lambda x: int(x), input("end:")))
+            if len(_e) != 2:
+                print("잘못된 입력입니다.")
+                continue
 
-        _e = tuple(map(lambda x: int(x), input("end:")))
+        except ValueError as e:
+            print("잘못된 입력입니다.")
+            continue
 
         if (_s[0] == 1 and b.turn == Player.WHITE)\
             or (_s[0] == 6 and b.turn == Player.BLACK):
