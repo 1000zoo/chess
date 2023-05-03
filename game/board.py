@@ -1,13 +1,13 @@
 from constant import *
 
-
+FOR_CHECKING = False
 class Board:
     def __init__(self, board=init_board, turn=Player.WHITE):
         self.player = None
         self.size = len(board)
         self.board = self.setting_board(board)
         self.turn = turn
-        self.previous_move = None  # (Piece, end)
+        self.previous_move = None  # (Piece, start, end)
 
     def __str__(self):
         board_str = '-----------------\n'
@@ -54,6 +54,9 @@ class Board:
     def move(self, start, end):
         c1, r1 = start
         c2, r2 = end
+        global FOR_CHECKING
+        FOR_CHECKING = start == (3,2) and end == (2,2)
+
         piece = self.board[c1][r1]
 
         if not self.is_occupied(start):
@@ -65,15 +68,17 @@ class Board:
 
 
         if isinstance(piece, Pawn):
-            self.move_pawn(start, end)
+            if not self.move_pawn(start, end):
+                return
         else:
-            self.move_piece(start, end)
+            if not self.move_piece(start, end):
+                return
 
         if self.final_check(start, end):
-            print("체크입니다~!!!!!!!!!!!!")
+            print("체크")
 
         piece.set_position(end)
-        self.previous_move = (piece, end)
+        self.previous_move = (piece, start, end)
         self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
 
@@ -85,11 +90,11 @@ class Board:
 
         if not isinstance(piece, Pawn):
             print("error")
-            return
+            return False
 
         if end not in piece.get_legal_moves(self):
             print("가능한 수 X")
-            return
+            return False
 
         if piece.is_promotion_line():
             prom_val = c2
@@ -99,7 +104,7 @@ class Board:
 
             self.board[c1][r1] = None
             self.board[nc][r2] = prom_piece
-            return
+            return True
 
         if piece.enpassant(self):
             _, taked_pos = piece.enpassant(self)
@@ -114,6 +119,7 @@ class Board:
             self.board[c2][r2] = self.board[c1][r1]
             self.board[c1][r1] = None
 
+        return True
 
     def move_piece(self, start, end):
         c1, r1 = start
@@ -123,15 +129,16 @@ class Board:
         ## piece != None 이라는 것을 편집기한테 알려주기위해서
         if not isinstance(piece, Piece):
             print("아무것도 없는 칸")
-            return
+            return False
 
         if end not in piece.get_legal_moves(self):
             print("가능한 수 X")
-            return
+            return False
 
         self.board[c2][r2] = self.board[c1][r1]
         self.board[c1][r1] = None
 
+        return True
 
     def pre_check(self, start):
         c1, r1 = start
@@ -362,13 +369,20 @@ class Pawn(Piece):
 
     def enpassant(self, b: Board):
         c, r = self.pos
+        # if FOR_CHECKING:
+        #     breakpoint()
         if b.previous_move is not None:
-            prev_piece, prev_move = b.previous_move
+            prev_piece, prev_start, prev_end = b.previous_move
             if isinstance(prev_piece, Pawn):
-                prev_c, prev_r = prev_move
+                prev_c1, prev_r1 = prev_start
+                prev_c2, prev_r2 = prev_end
                 white = self.player == Player.WHITE
-                return (white and c == prev_c == 3) or (not white and c == prev_c == 4) \
-                       and abs(prev_r - r) == 1, (c + self.directions, prev_r)
+
+                if white and prev_c1 == 1 and prev_c2 == 3 and c == 3 and abs(prev_r2 - r) == 1:
+                    return True, (c + self.directions, prev_r2)
+                elif prev_c1 == 6 and prev_c2 == 4 and c == 4 and abs(prev_r2 - r) == 1:
+                    return True, (c + self.directions, prev_r2)
+
         return False
 
 
