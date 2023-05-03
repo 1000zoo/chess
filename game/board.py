@@ -45,40 +45,11 @@ class Board:
     def is_within_bounds(self, pos):
         return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
 
-    def find_myk(self):
-
+    def find_king(self, color):
         for col in self.board:
             for row in col:
-                if isinstance(row, King):
-                    if row.player == Player.WHITE:
-                        if self.turn == Player.WHITE:
-                            return row.pos
-                        elif self.turn == Player.BLACK:
-                            break
-                    elif row.player == Player.BLACK:
-                        if self.turn == Player.WHITE:
-                            break
-                        elif self.turn == Player.BLACK:
-                            return row.pos
-
-    def find_opk(self):
-
-        if self.turn == Player.WHITE:
-            for col in self.board:
-                for row in col:
-                    if isinstance(row, King): # 왕 찾았어
-                        if row.player == Player.WHITE:
-                            return row.pos
-                        if row.player == Player.BLACK: # 화이츠 차례에 왕이 블랙이면 위치를 보낸다 이거잖아
-                            continue
-        if self.turn == Player.BLACK:
-            for col in self.board:
-                for row in col:
-                    if isinstance(row, King): # 왕 찾았어
-                        if row.player == Player.BLACK:
-                            return row.pos
-                        if row.player == Player.WHITE: # 화이츠 차례에 왕이 블랙이면 위치를 보낸다 이거잖아
-                            continue
+                if isinstance(row, King) and row.player == color:
+                    return row.pos
 
     def move(self, start, end):
         c1, r1 = start
@@ -100,11 +71,13 @@ class Board:
 
         if self.final_check(start, end):
             print("체크입니다~!!!!!!!!!!!!")
-            return
+
+        piece.set_position(end)
+        self.previous_move = (piece, end)
+        self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
 
-        ## 폰 움직임 여기서 구현
-
+    ## 폰 움직임 여기서 구현
     def move_pawn(self, start, end):
         c1, r1 = start
         c2, r2 = end
@@ -141,10 +114,6 @@ class Board:
             self.board[c2][r2] = self.board[c1][r1]
             self.board[c1][r1] = None
 
-        piece.set_position(end)
-        self.previous_move = (piece, end)
-
-        self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
     def move_piece(self, start, end):
         c1, r1 = start
@@ -162,15 +131,12 @@ class Board:
 
         self.board[c2][r2] = self.board[c1][r1]
         self.board[c1][r1] = None
-        piece.set_position(end)
-        self.previous_move = (piece, end)
 
-        self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
     def pre_check(self, start):
         c1, r1 = start
         ini_piece = self.board[c1][r1]
-        k_col, k_row = self.find_myk()
+        k_col, k_row = self.find_king(self.turn)
         self.board[c1][r1] = None
 
         pieces = {
@@ -215,10 +181,9 @@ class Board:
     def final_check(self, start, end):
         c1, r1 = start
         c2, r2 = end
-        opk_col, opk_row = self.find_opk()
+        _color = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
+        opk_col, opk_row = self.find_king(_color)
         last_piece = self.board[c2][r2]
-        ini_piece = self.board[c1][r1]
-        self.board[c1][r1] = None
 
         pieces = {
             'b': bishop_directions,
@@ -235,66 +200,45 @@ class Board:
                 if not self.is_within_bounds((ct, rt)):
                     continue
 
-                if isinstance(self.board[ct][rt], Knight):
-                    self.board[c1][r1] = ini_piece
+                if self.is_enemy((ct, rt), _color) and isinstance(self.board[ct][rt], Knight):
                     return True
 
         if isinstance(last_piece, Pawn):
-
             pawn_directions = [(-1, -1), (-1, 1)]
             PAWN_directions = [(1, 1), (1, -1)]
 
             if self.turn == Player.BLACK:
-                for direction in PAWN_directions:
-                    ct, rt = opk_col + direction[0], opk_row + direction[1]
-                    if not self.is_within_bounds((ct, rt)):
-                        break
-
-                    if (ct, rt) in (opk_col, opk_row):
-                        self.board[c1][r1] = ini_piece
-                        return True
-
-            if self.turn == Player.WHITE:
                 for direction in pawn_directions:
                     ct, rt = opk_col + direction[0], opk_row + direction[1]
                     if not self.is_within_bounds((ct, rt)):
                         continue
 
-                    if (ct, rt) in (opk_col, opk_row):
-                        self.board[c1][r1] = ini_piece
+                    if self.is_enemy((ct, rt), _color) and isinstance(self.board[ct][rt], Pawn):
                         return True
-        #움직인 말이 비숍, 룩, 퀸인 경우 또는 움직인 말에 의해 생성된 경로에 이 좌표가 있으면 check
-        for piece in pieces:
 
+            if self.turn == Player.WHITE:
+                for direction in PAWN_directions:
+                    ct, rt = opk_col + direction[0], opk_row + direction[1]
+                    if not self.is_within_bounds((ct, rt)):
+                        continue
+
+                    if self.is_enemy((ct, rt), _color) and isinstance(self.board[ct][rt], Pawn):
+                        return True
+
+        #움직인 말이 비숍, 룩, 퀸인 경우 또는 움직인 말에 의해 생성된 경로에 이 좌표가 있으면 check
+
+        for piece in pieces:
+            curr_piece = globals()[classname_of_pieces[piece]]
             for direction in pieces[piece]:
                 ct, rt = opk_col + direction[0], opk_row + direction[1]
-
                 while self.is_within_bounds((ct, rt)):
+                    if self.is_enemy((ct, rt), _color) and isinstance(self.board[ct][rt], curr_piece):
+                        return True
+                    if not self.is_empty((ct, rt)):
+                        break
 
-                    if isinstance(pieces[piece], Bishop):
-                        if isinstance(self.board[ct][rt], Bishop):
-                            self.board[c1][r1] = ini_piece
-                            return True
-                        if not self.is_empty((ct, rt)):
-                            break
-
-                    if isinstance(pieces[piece], Rook):
-                        if isinstance(self.board[ct][rt], Rook):
-                            self.board[c1][r1] = ini_piece
-                            return True
-                        if not self.is_empty((ct, rt)):
-                            break
-
-                    if isinstance(pieces[piece], Queen):
-                        if isinstance(self.board[ct][rt], Queen):
-                            self.board[c1][r1] = ini_piece
-                            return True
-                        if not self.is_empty((ct, rt)):
-                            break
                     ct, rt = ct + direction[0], rt + direction[1]
 
-
-        self.board[c1][r1] = ini_piece
         return False
 
 
@@ -354,7 +298,6 @@ class Piece:
                         break
                     else:
                         break
-        print(legal_moves)
 
         return legal_moves
 
@@ -409,7 +352,6 @@ class Pawn(Piece):
             _, enpassant_end = self.enpassant(b)
             legal_moves.append(enpassant_end)
 
-        print(legal_moves)
 
         return legal_moves
 
@@ -427,7 +369,6 @@ class Pawn(Piece):
                 white = self.player == Player.WHITE
                 return (white and c == prev_c == 3) or (not white and c == prev_c == 4) \
                        and abs(prev_r - r) == 1, (c + self.directions, prev_r)
-
         return False
 
 
