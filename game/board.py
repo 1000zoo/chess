@@ -32,7 +32,7 @@ class Board:
         return temp
 
     def opp_color(self):
-        return Player.WHITE if self.player == Player.BLACK else Player.BLACK
+        return Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
     def is_enemy(self, pos, player) -> bool:
         if self.is_empty(pos):
@@ -143,6 +143,23 @@ class Board:
 
         return True
 
+    def check(self, temp_board=None):
+        color = None
+        if not temp_board:
+            temp_board = self.board
+            color = self.turn
+        else:
+            color = self.opp_color()
+
+        ## pawn의 경우
+        kc, kr = self.find_king(color)
+
+        directions = {
+
+        }
+
+
+
     def pre_check(self, start):
         c1, r1 = start
         ini_piece = self.board[c1][r1]
@@ -214,26 +231,16 @@ class Board:
                     return True
 
         if isinstance(last_piece, Pawn):
-            pawn_directions = [(-1, -1), (-1, 1)]
-            PAWN_directions = [(1, 1), (1, -1)]
+            pawn_directions = [(-1, -1), (-1, 1)] if self.turn == Player.BLACK else [(1, 1), (1, -1)]
 
-            if self.turn == Player.BLACK:
-                for direction in pawn_directions:
-                    ct, rt = opk_col + direction[0], opk_row + direction[1]
-                    if not self.is_within_bounds((ct, rt)):
-                        continue
+            for direction in pawn_directions:
+                ct, rt = opk_col + direction[0], opk_row + direction[1]
+                if not self.is_within_bounds((ct, rt)):
+                    continue
 
-                    if self.is_enemy((ct, rt), _color) and isinstance(self.board[ct][rt], Pawn):
-                        return True
+                if self.is_enemy((ct, rt), _color) and isinstance(self.board[ct][rt], Pawn):
+                    return True
 
-            if self.turn == Player.WHITE:
-                for direction in PAWN_directions:
-                    ct, rt = opk_col + direction[0], opk_row + direction[1]
-                    if not self.is_within_bounds((ct, rt)):
-                        continue
-
-                    if self.is_enemy((ct, rt), _color) and isinstance(self.board[ct][rt], Pawn):
-                        return True
 
         #움직인 말이 비숍, 룩, 퀸인 경우 또는 움직인 말에 의해 생성된 경로에 이 좌표가 있으면 check
 
