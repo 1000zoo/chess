@@ -109,8 +109,8 @@ class Board:
             self.board[nc][r2] = prom_piece
             return True
 
-        if piece.enpassant(self):
-            _, taked_pos = piece.enpassant(self)
+        if piece.is_enpassant(end, self):
+            taked_pos = piece.enpassant(self)
             tc, tr = taked_pos
             tc -= piece.directions
 
@@ -258,6 +258,8 @@ class Board:
 def get_classname(piece):
     return classname_of_pieces[piece.lower()]
 
+def is_white(player):
+    return player == Player.WHITE
 
 def can_castling():
     pass
@@ -269,9 +271,11 @@ class Piece:
         self.pos = pos
         self.player = player
         self.directions = directions
+        self.moved = False
 
     def set_position(self, _pos: tuple):
         self.pos = _pos
+        self.moved = True
 
     def get_position(self):
         return self.pos
@@ -334,13 +338,13 @@ class Piece:
 
 class Pawn(Piece):
     def __init__(self, pos: tuple, player: Player):
-        super().__init__(pos, player, -1 if player == Player.WHITE else 1)
+        super().__init__(pos, player, -1 if is_white(player) else 1)
 
     def __str__(self):
-        return 'p' if self.player == Player.WHITE else 'P'
+        return 'p' if is_white(self.player) else 'P'
 
     def _get_promotion_cases(self, r):
-        return [('q', r), ('r', r), ('n', r), ('b', r)] if self.player == Player.WHITE else \
+        return [('q', r), ('r', r), ('n', r), ('b', r)] if is_white(self.player) else \
             [('Q', r), ('R', r), ('N', r), ('B', r)]
 
     def get_legal_moves(self, b: Board):
@@ -348,8 +352,6 @@ class Pawn(Piece):
         legal_moves = []
         first = self.player == Player.WHITE and c1 == 6 \
                 or self.player == Player.BLACK and c1 == 1
-        promotion_line = self.player == Player.WHITE and c1 == 1 \
-                         or self.player == Player.BLACK and c1 == 6
 
         if first:
             for d in range(1, 3):
@@ -378,35 +380,45 @@ class Pawn(Piece):
                 else:
                     legal_moves.append(temp)
 
-        if self.enpassant(b):
-            _, enpassant_end = self.enpassant(b)
+        enpassant_end = self.enpassant(b)
+        if enpassant_end:
             if not b.pre_check(self.pos, enpassant_end):
                 legal_moves.append(enpassant_end)
-
 
         return legal_moves
 
     def is_promotion_line(self):
-        c1, r1 = self.pos
-        return self.player == Player.WHITE and c1 == 1 \
-            or self.player == Player.BLACK and c1 == 6
+        c, r = self.pos
+        return self.player == Player.WHITE and c == 1 \
+            or self.player == Player.BLACK and c == 6
 
     def enpassant(self, b: Board):
         c, r = self.pos
 
-        if b.previous_move is not None:
+        if b.previous_move:
             prev_piece, prev_start, prev_end = b.previous_move
             if isinstance(prev_piece, Pawn):
                 prev_c1, prev_r1 = prev_start
                 prev_c2, prev_r2 = prev_end
-                white = self.player == Player.WHITE
+                white = is_white(self.player)
 
                 if white and prev_c1 == 1 and prev_c2 == 3 and c == 3 and abs(prev_r2 - r) == 1:
-                    return True, (c + self.directions, prev_r2)
+                    return c + self.directions, prev_r2
                 elif prev_c1 == 6 and prev_c2 == 4 and c == 4 and abs(prev_r2 - r) == 1:
-                    return True, (c + self.directions, prev_r2)
+                    return c + self.directions, prev_r2
+
+    def is_enpassant(self, end, b: Board):
+        c2, r2 = end
+
+        if b.previous_move:
+            prev_piece, prev_start, prev_end = b.previous_move
+            if isinstance(prev_piece, Pawn):
+                prev_c2, prev_r2 = prev_end
+
+                return self.enpassant(b) and prev_r2 == r2
 
         return False
+
 
 
 class Knight(Piece):
@@ -414,7 +426,7 @@ class Knight(Piece):
         super().__init__(pos, player, knight_directions)
 
     def __str__(self):
-        return 'n' if self.player == Player.WHITE else 'N'
+        return 'n' if is_white(self.player) else 'N'
 
 
 class Bishop(Piece):
@@ -422,7 +434,7 @@ class Bishop(Piece):
         super().__init__(pos, player, bishop_directions)
 
     def __str__(self):
-        return 'b' if self.player == Player.WHITE else 'B'
+        return 'b' if is_white(self.player) else 'B'
 
 
 class Rook(Piece):
@@ -431,7 +443,7 @@ class Rook(Piece):
         self.move = False  ## 캐슬링
 
     def __str__(self):
-        return 'r' if self.player == Player.WHITE else 'R'
+        return 'r' if is_white(self.player) else 'R'
 
 
 class Queen(Piece):
@@ -439,16 +451,15 @@ class Queen(Piece):
         super().__init__(pos, player, queen_directions)
 
     def __str__(self):
-        return 'q' if self.player == Player.WHITE else 'Q'
+        return 'q' if is_white(self.player) else 'Q'
 
 
 class King(Piece):
     def __init__(self, pos: tuple, player: Player):
         super().__init__(pos, player, king_directions)
-        self.move = False  ## 캐슬링
 
     def __str__(self):
-        return 'k' if self.player == Player.WHITE else 'K'
+        return 'k' if is_white(self.player) else 'K'
 
     def get_legal_moves(self, b: Board):
         col, row = self.pos
@@ -458,3 +469,8 @@ class King(Piece):
         can_castling()
 
         return legal_moves
+
+    def can_castling(self, b: Board):
+        _col = 7 if is_white(self.player) else 0
+        left, right = ((_col, 2), (_col, 6))
+        lr, rr = (b.board[_col][2], b.board[_col][6])
