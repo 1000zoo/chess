@@ -35,8 +35,8 @@ if __name__ == '__main__':
             print("잘못된 입력입니다.")
             continue
 
-        if (_s[0] == 1 and b.turn == Player.WHITE)\
-            or (_s[0] == 6 and b.turn == Player.BLACK):
+        if ((_s[0] == 1 and b.turn == Player.WHITE)
+            or (_s[0] == 6 and b.turn == Player.BLACK)) and isinstance(p, Pawn):
             prom = input("promotion to (qrbn) => ")
             _e = (prom, _e[1])
             pass
