@@ -1,6 +1,5 @@
 from constant import *
 
-FOR_CHECKING = False
 class Board:
     def __init__(self, board=init_board, turn=Player.WHITE):
         self.size = len(board)
@@ -52,13 +51,11 @@ class Board:
     def is_within_bounds(self, pos):
         return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
 
-
     def find_king(self, color):
         for i, col in enumerate(self.board):
             for j, row in enumerate(col):
                 if isinstance(row, King) and row.player == color:
                     return i, j
-
 
     def move(self, start, end):
         c1, r1 = start
@@ -84,7 +81,6 @@ class Board:
         piece.set_position(end)
         self.previous_move = (piece, start, end)
         self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
-
 
     def move_pawn(self, start, end):
         c1, r1 = start
@@ -124,7 +120,6 @@ class Board:
 
         return True
 
-
     def move_piece(self, start, end):
         c1, r1 = start
         c2, r2 = end
@@ -139,11 +134,31 @@ class Board:
             print("가능한 수 X")
             return False
 
+        ## 캐슬링 움직임 처리
+        if isinstance(piece, King):
+            _col = 7 if is_white(piece.player) else 0
+            ## [룩의 원래 위치, 룩이 갈 위치, 왕이 갈 위치]
+            temp = {-1: [0, 3, 2], 1: [7, 5, 6]}
+
+            case = piece.is_castling(start, end)
+            ki = 4
+            if case != 0:
+                ri, rf, kf = temp[case]
+                _rook = self.board[_col][ri]
+                if not isinstance(_rook, Rook):
+                    print("알수없는 오류")
+                    return False
+                _rook.set_position((_col, rf))
+                self.board[_col][rf] = self.board[_col][ri]
+                self.board[_col][kf] = self.board[_col][ki]
+                self.board[_col][ri] = None
+                self.board[_col][ki] = None
+                return True
+
         self.board[c2][r2] = self.board[c1][r1]
         self.board[c1][r1] = None
 
         return True
-
 
     def pre_check(self, start, end):
         c1, r1 = start
@@ -156,8 +171,8 @@ class Board:
         k_col, k_row = self.find_king(self.turn)
 
         pieces = {
-            'n' : knight_directions,
-            'k' : king_directions
+            'n': knight_directions,
+            'k': king_directions
         }
 
         for piece in pieces:
@@ -209,7 +224,6 @@ class Board:
         self.board[c2][r2] = final_piece
         return False
 
-
     def final_check(self):
         _color = self.opp_color()
         opk_col, opk_row = self.find_king(_color)
@@ -238,7 +252,7 @@ class Board:
             if self.is_enemy((ct, rt), _color) and isinstance(self.board[ct][rt], Pawn):
                 return True
 
-        #움직인 말이 비숍, 룩, 퀸인 경우 또는 움직인 말에 의해 생성된 경로에 이 좌표가 있으면 check
+        # 움직인 말이 비숍, 룩, 퀸인 경우 또는 움직인 말에 의해 생성된 경로에 이 좌표가 있으면 check
 
         for piece in pieces:
             curr_piece = globals()[classname_of_pieces[piece]]
@@ -258,8 +272,10 @@ class Board:
 def get_classname(piece):
     return classname_of_pieces[piece.lower()]
 
+
 def is_white(player):
     return player == Player.WHITE
+
 
 def can_castling():
     pass
@@ -390,7 +406,7 @@ class Pawn(Piece):
     def is_promotion_line(self):
         c, r = self.pos
         return self.player == Player.WHITE and c == 1 \
-            or self.player == Player.BLACK and c == 6
+               or self.player == Player.BLACK and c == 6
 
     def enpassant(self, b: Board):
         c, r = self.pos
@@ -420,7 +436,6 @@ class Pawn(Piece):
         return False
 
 
-
 class Knight(Piece):
     def __init__(self, pos: tuple, player: Player):
         super().__init__(pos, player, knight_directions)
@@ -440,7 +455,6 @@ class Bishop(Piece):
 class Rook(Piece):
     def __init__(self, pos: tuple, player: Player):
         super().__init__(pos, player, rook_directions)
-        self.move = False  ## 캐슬링
 
     def __str__(self):
         return 'r' if is_white(self.player) else 'R'
@@ -465,12 +479,47 @@ class King(Piece):
         col, row = self.pos
         legal_moves = super().get_legal_moves(b)
 
-        ##TODO 캐슬링 구현
-        can_castling()
+        castle = self.castling(b)
+        if castle:
+            legal_moves.extend(castle)
 
         return legal_moves
 
-    def can_castling(self, b: Board):
+    def castling(self, b: Board):
         _col = 7 if is_white(self.player) else 0
-        left, right = ((_col, 2), (_col, 6))
-        lr, rr = (b.board[_col][2], b.board[_col][6])
+        if self.moved or self.pos != (_col, 4):
+            return False
+
+        info = {0: (2, [4, 3, 2]), 7: (6, [4, 5, 6])}
+        results = []
+
+        for i in info:
+            rook = b.board[_col][i]
+            _row = info[i][0]
+            way = info[i][1]
+            if isinstance(rook, Rook):
+                if not rook.moved:
+                    can = True
+                    for row in way:
+                        temp = (_col, row)
+                        if not b.is_empty(temp) and temp != self.pos:
+                            can = False
+                            break
+                        if b.pre_check(self.pos, temp):
+                            can = False
+                            break
+                    if can:
+                        results.append((_col, _row))
+
+        return results
+
+    ## -1: left / 0: castling X / 1: right
+    ## 캐슬링이 가능한 경우인지 이미 확인한 후에, 고른 움직임이 캐슬링인지 확인하는 메소드
+    def is_castling(self, start, end):
+        _col = 7 if is_white(self.player) else 0
+        if start == (_col, 4) and end == (_col, 2):
+            return -1
+        if start == (_col, 4) and end == (_col, 6):
+            return 1
+
+        return 0
