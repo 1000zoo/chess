@@ -400,8 +400,7 @@ class Pawn(Piece):
 
     def enpassant(self, b: Board):
         c, r = self.pos
-        # if FOR_CHECKING:
-        #     breakpoint()
+
         if b.previous_move is not None:
             prev_piece, prev_start, prev_end = b.previous_move
             if isinstance(prev_piece, Pawn):
