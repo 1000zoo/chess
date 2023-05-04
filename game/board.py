@@ -68,7 +68,9 @@ class Board:
         if piece.player != self.turn:
             print("플레이어의 기물 X.")
             return
-
+        if self.pre_check(start):
+            print("체크입니다")
+            return
 
         if isinstance(piece, Pawn):
             if not self.move_pawn(start, end):
@@ -163,6 +165,7 @@ class Board:
     def pre_check(self, start):
         c1, r1 = start
         ini_piece = self.board[c1][r1]
+        opp = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
         k_col, k_row = self.find_king(self.turn)
         self.board[c1][r1] = None
 
@@ -173,31 +176,16 @@ class Board:
         }
 
         for piece in pieces:
-
+            curr_piece = globals()[classname_of_pieces[piece]]
             for direction in pieces[piece]:
                 ct, rt = k_col + direction[0], k_row + direction[1]
-
                 while self.is_within_bounds((ct, rt)):
-                    if isinstance(pieces[piece], Bishop):
-                        if isinstance(self.board[ct][rt], Bishop):
-                            self.board[c1][r1] = ini_piece
-                            return True
-                        if not self.is_empty((ct, rt)):
-                            break
+                    if self.is_enemy((ct, rt), opp) and isinstance(self.board[ct][rt], curr_piece):
+                        self.board[c1][r1] = ini_piece
+                        return True
+                    if not self.is_empty((ct, rt)):
+                        break
 
-                    if isinstance(pieces[piece], Rook):
-                        if isinstance(self.board[ct][rt], Rook):
-                            self.board[c1][r1] = ini_piece
-                            return True
-                        if not self.is_empty((ct, rt)):
-                            break
-
-                    if isinstance(pieces[piece], Queen):
-                        if isinstance(self.board[ct][rt], Queen):
-                            self.board[c1][r1] = ini_piece
-                            return True
-                        if not self.is_empty((ct, rt)):
-                            break
                     ct, rt = ct + direction[0], rt + direction[1]
 
         self.board[c1][r1] = ini_piece
