@@ -3,7 +3,6 @@ from constant import *
 FOR_CHECKING = False
 class Board:
     def __init__(self, board=init_board, turn=Player.WHITE):
-        self.player = None
         self.size = len(board)
         self.all_pieces = []
         self.board = self.setting_board(board)
@@ -31,7 +30,6 @@ class Board:
                 temp[i][j] = globals()[classname_of_pieces[sq]]((i, j), player)
                 self.all_pieces.append(temp[i][j])
 
-
         return temp
 
     def opp_color(self):
@@ -42,6 +40,9 @@ class Board:
             return False
         return self.board[pos[0]][pos[1]].player != player
 
+    def is_ally(self, pos, player):
+        return not self.is_enemy(pos, player) and not self.is_empty(pos)
+
     def is_occupied(self, pos) -> bool:
         return self.board[pos[0]][pos[1]] is not None
 
@@ -50,6 +51,7 @@ class Board:
 
     def is_within_bounds(self, pos):
         return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
+
 
     def find_king(self, color):
         for i, col in enumerate(self.board):
@@ -60,10 +62,6 @@ class Board:
 
     def move(self, start, end):
         c1, r1 = start
-        c2, r2 = end
-        global FOR_CHECKING
-        FOR_CHECKING = start == (3,2) and end == (2,2)
-
         piece = self.board[c1][r1]
 
         if not self.is_occupied(start):
@@ -80,7 +78,7 @@ class Board:
             if not self.move_piece(start, end):
                 return
 
-        if self.final_check(start, end):
+        if self.final_check():
             print("체크")
 
         piece.set_position(end)
@@ -88,7 +86,6 @@ class Board:
         self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
 
 
-    ## 폰 움직임 여기서 구현
     def move_pawn(self, start, end):
         c1, r1 = start
         c2, r2 = end
@@ -154,7 +151,6 @@ class Board:
         ini_piece = self.board[c1][r1]
         final_piece = self.board[c2][r2]
 
-
         self.board[c1][r1] = None
         self.board[c2][r2] = ini_piece
         k_col, k_row = self.find_king(self.turn)
@@ -176,7 +172,6 @@ class Board:
                     self.board[c2][r2] = final_piece
                     return True
 
-
         pawn_directions = [(-1, -1), (-1, 1)] if self.turn == Player.WHITE else [(1, 1), (1, -1)]
 
         for direction in pawn_directions:
@@ -188,7 +183,6 @@ class Board:
                 self.board[c1][r1] = ini_piece
                 self.board[c2][r2] = final_piece
                 return True
-
 
         pieces = {
             'b': bishop_directions,
@@ -216,7 +210,7 @@ class Board:
         return False
 
 
-    def final_check(self, start, end):
+    def final_check(self):
         _color = self.opp_color()
         opk_col, opk_row = self.find_king(_color)
 
@@ -297,7 +291,7 @@ class Piece:
                 if not b.is_within_bounds(new_pos):
                     continue
 
-                if not b.is_enemy(new_pos, self.player) and not b.is_empty(new_pos):
+                if b.is_ally(new_pos, self.player):
                     continue
 
                 if b.pre_check(self.pos, new_pos):
@@ -316,7 +310,7 @@ class Piece:
 
                 while b.is_within_bounds(new_pos):
                     ## 아군이냐
-                    if not b.is_enemy(new_pos, self.player) and not b.is_empty(new_pos):
+                    if b.is_ally(new_pos, self.player):
                         break
 
                     if b.pre_check(self.pos, new_pos):
@@ -360,9 +354,7 @@ class Pawn(Piece):
         if first:
             for d in range(1, 3):
                 temp = (c1 + self.directions * d, r1)
-                if b.pre_check(self.pos, temp):
-                    continue
-                if b.is_empty(temp):
+                if b.is_empty(temp) and not b.pre_check(self.pos, temp):
                     legal_moves.append(temp)
                 else:
                     break
@@ -377,7 +369,7 @@ class Pawn(Piece):
 
         for d in [-1, 1]:
             temp = (c1 + self.directions, r1 + d)
-            if b.pre_check(self.pos, temp):
+            if not b.is_ally(temp, self.player) and b.pre_check(self.pos, temp):
                 continue
 
             if b.is_within_bounds(temp) and b.is_enemy(temp, self.player):
@@ -388,7 +380,8 @@ class Pawn(Piece):
 
         if self.enpassant(b):
             _, enpassant_end = self.enpassant(b)
-            legal_moves.append(enpassant_end)
+            if not b.pre_check(self.pos, enpassant_end):
+                legal_moves.append(enpassant_end)
 
 
         return legal_moves
