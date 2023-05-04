@@ -18,6 +18,9 @@ class Board:
         board_str += '-----------------\n'
         return board_str
 
+    def piece_at(self, pos):
+        return self.board[pos[0]][pos[1]]
+
     def setting_board(self, board):
         temp = [[None for _ in range(self.size)] for _ in range(self.size)]
 
