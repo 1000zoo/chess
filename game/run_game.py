@@ -1,12 +1,17 @@
 import pygame
 import sys
-
 from board import *
 
+SIZE = width, height = 512, 512
+SQUARE_SIZE = SW, SH = width / 8, height / 8
+# INDICATOR_SIZE = IW, IH = SW / 1.5, SH / 1.5
+MBD = pygame.MOUSEBUTTONDOWN
+
+
 class Square:
-    def __init__(self, row, col, x, y, size, callback=None):
-        self.row = row
+    def __init__(self, col, row, x, y, size, callback=None):
         self.col = col
+        self.row = row
         self.x = x
         self.y = y
         self.size = size
@@ -21,20 +26,21 @@ class Square:
         return self.x <= x <= self.x + self.size and self.y <= y <= self.y + self.size
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event == MBD:
             pos = pygame.mouse.get_pos()
             if self.is_clicked(pos):
                 if self.callback:
-                    self.callback(self.row, self.col)
+                    return self.callback(self.col, self.row)
 
 
 class SquareMatrix:
-    def __init__(self):
-        self.board = ...
+    def __init__(self, _board):
+        self.board = _board
         self.matrix = []
+        self.create_squares()
         ...
 
-    def create_squares(self, x_offset, y_offset, square_size):
+    def create_squares(self, x_offset=0, y_offset=0, square_size=SW):
         for row in range(8):
             for col in range(8):
                 x = x_offset + col * square_size
@@ -48,27 +54,26 @@ class SquareMatrix:
             if square.piece:
                 square.piece.draw(surface)
 
-    def on_square_clicked(self, row, col):
-        # 해당 칸이 클릭되었을 때 호출될 함수
-        pass
+    @staticmethod
+    def on_square_clicked(col, row):
+        return col, row
 
     def handle_event(self, event):
         for square in self.matrix:
-            square.handle_event(event)
+            temp = square.handle_event(event)
+            if temp:
+                return temp
 
 
 def main():
     # 초기화
     pygame.init()
-    SIZE = width, height = 512, 512
-    SQUARE_SIZE = SW, SH = width / 8, height / 8
-    # INDICATOR_SIZE = IW, IH = SW / 1.5, SH / 1.5
+
+    main_board = Board()
 
     screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption("Chess")
 
-    # 보드 생성
-    board = Board()
 
     # 체스말 이미지 로드
     images = {}
@@ -79,19 +84,35 @@ def main():
             piece_image = pygame.transform.scale(piece_image, SQUARE_SIZE)
             images[f"{color}{name}"] = piece_image
 
+    board_img = pygame.image.load('asset/img/000.png')
+    board_img = pygame.transform.scale(board_img, SIZE)
+
     indicator = pygame.image.load("asset/img/001.png")
     indicator = pygame.transform.scale(indicator, SQUARE_SIZE)
 
+    sm = SquareMatrix(main_board)
+    screen.blit(board_img, (0, 0))
+
     # 게임 루프
     while True:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-        board_img = pygame.image.load('asset/img/000.png')
-        board_img = pygame.transform.scale(board_img, SIZE)
-        screen.blit(board_img, (0,0))
+            if event.type == MBD:
+                screen.blit(board_img, (0, 0))
+                col, row = sm.handle_event(MBD)
+                selected_piece = main_board.board[col][row]
+
+                if isinstance(selected_piece, Piece):
+                    lm = selected_piece.get_legal_moves(main_board)
+
+                    for _c, _r in lm:
+                        y = _c * SH
+                        x = _r * SH
+                        screen.blit(indicator, (x, y))
 
         # 보드 그리기
         for row in range(8):
@@ -99,7 +120,7 @@ def main():
                 x = col * SH
                 y = row * SW
 
-                piece = board.piece_at((row, col))
+                piece = main_board.piece_at((row, col))
                 if isinstance(piece, Piece):
                     _color = 'w' if is_white(piece.player) else 'b'
                     _pname = str(piece).lower()
