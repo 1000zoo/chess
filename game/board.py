@@ -390,6 +390,8 @@ class Pawn(Piece):
 
         for d in [-1, 1]:
             temp = (c1 + self.directions, r1 + d)
+            if not b.is_within_bounds(temp):
+                continue
             if not b.is_ally(temp, self.player) and b.pre_check(self.pos, temp):
                 continue
 
