@@ -68,18 +68,18 @@ class Board:
         piece = self.board[c1][r1]
 
         if not self.is_occupied(start):
-            print("아무것도 없는 칸")
-            return
+            # print("아무것도 없는 칸")
+            return False
         if piece.player != self.turn:
-            print("플레이어의 기물 X.")
-            return
+            # print("플레이어의 기물 X.")
+            return False
 
         if isinstance(piece, Pawn):
             if not self.move_pawn(start, end):
-                return
+                return False
         else:
             if not self.move_piece(start, end):
-                return
+                return False
 
         if self.final_check():
             print("체크")
@@ -87,6 +87,7 @@ class Board:
         piece.set_position(end)
         self.previous_move = (piece, start, end)
         self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
+        return True
 
     def move_pawn(self, start, end):
         c1, r1 = start
@@ -98,7 +99,7 @@ class Board:
             return False
 
         if end not in piece.get_legal_moves(self):
-            print("가능한 수 X")
+            # print("가능한 수 X")
             return False
 
         if piece.is_promotion_line():
@@ -516,6 +517,8 @@ class King(Piece):
                         if b.pre_check(self.pos, temp):
                             can = False
                             break
+                    if i == 0 and not b.is_empty((_col, 1)):
+                        can = False
                     if can:
                         results.append((_col, _row))
 
