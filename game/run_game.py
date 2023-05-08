@@ -64,6 +64,25 @@ class SquareMatrix:
             if temp:
                 return temp
 
+def draw_board(main_board, images, screen):
+    for row in range(8):
+        for col in range(8):
+            x = col * SH
+            y = row * SW
+
+            piece = main_board.piece_at((row, col))
+            if isinstance(piece, Piece):
+                _color = 'w' if is_white(piece.player) else 'b'
+                _pname = str(piece).lower()
+                img = images[f"{_color}{_pname}"]
+                screen.blit(img, (x, y))
+
+def hub(x, y):
+    return x, y
+
+def reset_board(screen, board_img):
+    screen.blit(board_img, (0, 0))
+    return False
 
 def main():
     # 초기화
@@ -95,6 +114,9 @@ def main():
 
     # 게임 루프
     while True:
+        lm_square = []
+        # 보드 그리기
+        draw_board(main_board, images, screen)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -103,31 +125,46 @@ def main():
 
             if event.type == MBD:
                 screen.blit(board_img, (0, 0))
-                col, row = sm.handle_event(MBD)
-                selected_piece = main_board.board[col][row]
+                start = c1, r1 = sm.handle_event(MBD)
+                selected_piece = main_board.board[c1][r1]
 
-                if isinstance(selected_piece, Piece):
+                if isinstance(selected_piece, Piece) and \
+                        main_board.right_turn(selected_piece.player):
                     lm = selected_piece.get_legal_moves(main_board)
 
-                    for _c, _r in lm:
-                        y = _c * SH
-                        x = _r * SH
-                        screen.blit(indicator, (x, y))
+                    loop_on2 = True
+                    while loop_on2:
+                        draw_board(main_board, images, screen)
 
-        # 보드 그리기
-        for row in range(8):
-            for col in range(8):
-                x = col * SH
-                y = row * SW
+                        for _c, _r in lm:
+                            y = _c * SH
+                            x = _r * SH
+                            screen.blit(indicator, (x, y))
+                            tsc = Square(_c, _r, x, y, SH, lambda __x, __y: hub(__x, __y))
+                            lm_square.append(tsc)
 
-                piece = main_board.piece_at((row, col))
-                if isinstance(piece, Piece):
-                    _color = 'w' if is_white(piece.player) else 'b'
-                    _pname = str(piece).lower()
-                    img = images[f"{_color}{_pname}"]
-                    screen.blit(img, (x, y))
+                        for event2 in pygame.event.get():
+                            if event2.type == pygame.QUIT:
+                                pygame.quit()
+                                sys.exit()
 
-        pygame.display.flip()
+                            if event2.type == MBD and event2.button == 1:
+                                for _lm in lm_square:
+                                    end = _lm.handle_event(MBD)
+                                    if end:
+                                        main_board.move(start, end)
+
+                                    loop_on2 = reset_board(screen, board_img)
+
+
+                            if event2.type == MBD and event2.button == 3:
+                                loop_on2 = reset_board(screen, board_img)
+
+                        pygame.display.update()
+
+                    draw_board(main_board, images, screen)
+
+        pygame.display.update()
 
 
 if __name__=="__main__":
