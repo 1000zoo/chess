@@ -63,6 +63,14 @@ class Board:
                 if isinstance(row, King) and row.player == color:
                     return i, j
 
+    def get_all_moves(self):
+        results = {}
+        for col in self.board:
+            for row in col:
+                if isinstance(row, Piece):
+                    results[row.pos] = row.get_legal_moves(self)
+        return results
+
     def move(self, start, end):
         c1, r1 = start
         piece = self.board[c1][r1]
