@@ -4,6 +4,7 @@ class Board:
     def __init__(self, board=init_board, turn=Player.WHITE):
         self.size = len(board)
         self.all_pieces = []
+        self.king = {Player.WHITE : None, Player.BLACK : None}
         self.board = self.setting_board(board)
         self.turn = turn
         self.previous_move = None  # (Piece, start, end)
@@ -28,6 +29,8 @@ class Board:
                 sq = sq.lower()
                 temp[i][j] = globals()[classname_of_pieces[sq]]((i, j), player)
                 self.all_pieces.append(temp[i][j])
+                if isinstance(temp[i][j], King):
+                    self.king[player] = temp[i][j]
 
         return temp
 
@@ -73,10 +76,7 @@ class Board:
         return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
 
     def find_king(self, color):
-        for i, col in enumerate(self.board):
-            for j, row in enumerate(col):
-                if isinstance(row, King) and row.player == color:
-                    return i, j
+        return self.king[color].pos
 
     def get_all_moves(self):
         results = {}
