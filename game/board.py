@@ -67,8 +67,8 @@ class Board:
         results = {}
         for col in self.board:
             for row in col:
-                if isinstance(row, Piece):
-                    results[row.pos] = row.get_legal_moves(self)
+                if isinstance(row, Piece) and self.right_turn(row.player):
+                    results[row] = row.get_legal_moves(self)
         return results
 
     def move(self, start, end):
