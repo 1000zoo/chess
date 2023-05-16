@@ -49,6 +49,17 @@ class Board:
     def find_king(self, color):
         return self.king[color].pos
 
+    def col_SAN(self, c):
+        return str(self.size - c)
+
+    @staticmethod
+    def row_SAN(r):
+        return str(chr(r + ord('a')))
+
+    def get_SAN(self, pos):
+        c, r = pos
+        return self.col_SAN(c), self.row_SAN(r)
+
 
     def setting_board(self, board):
         temp = [[None for _ in range(self.size)] for _ in range(self.size)]
@@ -79,6 +90,47 @@ class Board:
 
         turn = " w" if self.turn == Player.WHITE else " b"
         return fen[:-1] + turn
+
+    def convert_to_SAN(self, start, end):
+        c1, r1 = start
+        c2, r2 = end
+        piece = self.board[c1][r1]
+        san = ""
+        c1san, r1san = self.get_SAN(start)
+        c2san, r2san = self.get_SAN(end)
+        start_san = r1san + c1san
+        end_san = r2san + c2san
+
+        _take = isinstance(self.board[c2][r2], Piece)
+
+        if not isinstance(piece, Piece):
+            print("ERROR")
+            exit(-1)
+
+        if isinstance(piece, Pawn):
+            san += r1san
+            _take = _take or piece.is_enpassant(end, self)
+
+            if _take:
+                san += 'x' + end_san
+            else:
+                san += c2san
+
+        elif isinstance(piece, King):
+            if piece.castling(self):
+                side = piece.is_castling(start, end)
+                if side == -1:
+                    return 'O-O-O'
+                elif side == 1:
+                    return 'O-O'
+            san += str(piece)
+            san += 'x' + end_san if _take else end_san
+
+        else:
+            pass
+
+
+        return san
 
 
     def get_all_moves(self):
@@ -117,6 +169,7 @@ class Board:
         else:
             if not self.move_piece(start, end):
                 return False
+
         check = False
         if self.final_check():
             check = True
@@ -154,6 +207,8 @@ class Board:
         if end not in piece.get_legal_moves(self):
             # print("가능한 수 X")
             return False
+
+        print(self.convert_to_SAN(start, end))
 
         if piece.is_promotion_line():
             prom_val = c2
@@ -194,6 +249,7 @@ class Board:
             print("가능한 수 X")
             return False
 
+        print(self.convert_to_SAN(start, end))
         ## 캐슬링 움직임 처리
         if isinstance(piece, King):
             _col = 7 if is_white(piece.player) else 0
