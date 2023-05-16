@@ -19,6 +19,37 @@ class Board:
         board_str += '-----------------\n'
         return board_str
 
+
+    def right_turn(self, player):
+        return self.turn == player
+
+    def piece_at(self, pos):
+        return self.board[pos[0]][pos[1]]
+
+    def opp_color(self):
+        return Player.WHITE if self.turn == Player.BLACK else Player.BLACK
+
+    def is_enemy(self, pos, player) -> bool:
+        if self.is_empty(pos):
+            return False
+        return self.board[pos[0]][pos[1]].player != player
+
+    def is_ally(self, pos, player):
+        return not self.is_enemy(pos, player) and not self.is_empty(pos)
+
+    def is_occupied(self, pos) -> bool:
+        return self.board[pos[0]][pos[1]] is not None
+
+    def is_empty(self, pos) -> bool:
+        return self.board[pos[0]][pos[1]] is None
+
+    def is_within_bounds(self, pos):
+        return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
+
+    def find_king(self, color):
+        return self.king[color].pos
+
+
     def setting_board(self, board):
         temp = [[None for _ in range(self.size)] for _ in range(self.size)]
 
@@ -49,34 +80,6 @@ class Board:
         turn = " w" if self.turn == Player.WHITE else " b"
         return fen[:-1] + turn
 
-    def right_turn(self, player):
-        return self.turn == player
-
-    def piece_at(self, pos):
-        return self.board[pos[0]][pos[1]]
-
-    def opp_color(self):
-        return Player.WHITE if self.turn == Player.BLACK else Player.BLACK
-
-    def is_enemy(self, pos, player) -> bool:
-        if self.is_empty(pos):
-            return False
-        return self.board[pos[0]][pos[1]].player != player
-
-    def is_ally(self, pos, player):
-        return not self.is_enemy(pos, player) and not self.is_empty(pos)
-
-    def is_occupied(self, pos) -> bool:
-        return self.board[pos[0]][pos[1]] is not None
-
-    def is_empty(self, pos) -> bool:
-        return self.board[pos[0]][pos[1]] is None
-
-    def is_within_bounds(self, pos):
-        return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
-
-    def find_king(self, color):
-        return self.king[color].pos
 
     def get_all_moves(self):
         results = {}
