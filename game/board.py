@@ -18,6 +18,19 @@ class Board:
         board_str += '-----------------\n'
         return board_str
 
+    def setting_board(self, board):
+        temp = [[None for _ in range(self.size)] for _ in range(self.size)]
+
+        for i, col in enumerate(board):
+            for j, sq in enumerate(col):
+                if sq == ' ': continue
+                player = Player.WHITE if sq.islower() else Player.BLACK
+                sq = sq.lower()
+                temp[i][j] = globals()[classname_of_pieces[sq]]((i, j), player)
+                self.all_pieces.append(temp[i][j])
+
+        return temp
+
     def convert_to_FEN(self):
         fen = ""
         for c in self.board:
@@ -38,19 +51,6 @@ class Board:
 
     def piece_at(self, pos):
         return self.board[pos[0]][pos[1]]
-
-    def setting_board(self, board):
-        temp = [[None for _ in range(self.size)] for _ in range(self.size)]
-
-        for i, col in enumerate(board):
-            for j, sq in enumerate(col):
-                if sq == ' ': continue
-                player = Player.WHITE if sq.islower() else Player.BLACK
-                sq = sq.lower()
-                temp[i][j] = globals()[classname_of_pieces[sq]]((i, j), player)
-                self.all_pieces.append(temp[i][j])
-
-        return temp
 
     def opp_color(self):
         return Player.WHITE if self.turn == Player.BLACK else Player.BLACK
