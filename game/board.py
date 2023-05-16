@@ -18,6 +18,21 @@ class Board:
         board_str += '-----------------\n'
         return board_str
 
+    def convert_to_FEN(self):
+        fen = ""
+        for c in self.board:
+            cnt = 0
+            for piece in c:
+                if isinstance(piece, Piece):
+                    fen += f"{cnt}{str(piece)}" if cnt != 0 else str(piece)
+                else:
+                    cnt += 1
+
+            fen += f"{cnt}/" if cnt != 0 else "/"
+
+        turn = " w" if self.turn == Player.WHITE else " b"
+        return fen[:-1] + turn
+
     def right_turn(self, player):
         return self.turn == player
 
@@ -71,14 +86,11 @@ class Board:
                     results[row] = row.get_legal_moves(self)
         return results
 
-    def is_checkmate(self):
+    def is_mate(self):
         all_legal_moves = self.get_all_moves()
-        print(all_legal_moves)
 
         for pos in all_legal_moves:
-
             if not all_legal_moves[pos]:
-                print("뿅")
                 continue
             else:
                 return False
@@ -102,22 +114,28 @@ class Board:
         else:
             if not self.move_piece(start, end):
                 return False
-        a = 1
+        check = False
         if self.final_check():
-            a = 2
+            check = True
             print("체크")
 
         piece.set_position(end)
         self.previous_move = (piece, start, end)
-        self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
+        self.turn = self.opp_color()
 
-        if a == 2 and self.is_checkmate():
-
-            print("체크메이트")
-
-        if a == 1 and self.is_checkmate():
-
-            print("스테일메이트")
+        ##TODO 게임 종료 로직
+        """
+        GameState.MOVE_FAIL
+        GameState.MOVE_SUCCESS
+        GameState.CHECKMATE
+        GameState.STALEMATE
+        출력하도록 수정
+        """
+        if self.is_mate():
+            if check:
+                print(f"체크메이트, {self.opp_color()} 승")
+            else:
+                print("스테일메이트, 무승부")
 
         return True
 
