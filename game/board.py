@@ -225,7 +225,7 @@ class Board:
 
         self.board[c1][r1] = None
         self.board[c2][r2] = ini_piece
-        k_col, k_row = self.find_king(self.turn)
+        k_col, k_row = end if isinstance(ini_piece, King) else self.find_king(self.turn)
 
         pieces = {
             'n': knight_directions,
@@ -329,17 +329,11 @@ class Board:
 def get_classname(piece):
     return classname_of_pieces[piece.lower()]
 
-
 def is_white(player):
     return player == Player.WHITE
 
 
-def can_castling():
-    pass
-
-
 class Piece:
-    ##player: boolean -> true=white / false=black
     def __init__(self, pos: tuple, player: Player, directions):
         self.pos = pos
         self.player = player
@@ -386,7 +380,6 @@ class Piece:
                 new_pos = (new_col, new_row)
 
                 while b.is_within_bounds(new_pos):
-                    ## 아군이냐
                     if b.is_ally(new_pos, self.player):
                         break
 
