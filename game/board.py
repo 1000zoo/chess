@@ -71,6 +71,20 @@ class Board:
                     results[row] = row.get_legal_moves(self)
         return results
 
+    def is_checkmate(self):
+        all_legal_moves = self.get_all_moves()
+        print(all_legal_moves)
+
+        for pos in all_legal_moves:
+
+            if not all_legal_moves[pos]:
+                print("뿅")
+                continue
+            else:
+                return False
+
+        return True
+
     def move(self, start, end):
         c1, r1 = start
         piece = self.board[c1][r1]
@@ -88,13 +102,23 @@ class Board:
         else:
             if not self.move_piece(start, end):
                 return False
-
+        a = 1
         if self.final_check():
+            a = 2
             print("체크")
 
         piece.set_position(end)
         self.previous_move = (piece, start, end)
         self.turn = Player.WHITE if self.turn == Player.BLACK else Player.BLACK
+
+        if a == 2 and self.is_checkmate():
+
+            print("체크메이트")
+
+        if a == 1 and self.is_checkmate():
+
+            print("스테일메이트")
+
         return True
 
     def move_pawn(self, start, end):
