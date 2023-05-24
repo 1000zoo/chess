@@ -8,7 +8,8 @@ class Board:
         self.board = self.setting_board(board)
         self.turn = turn
         self.previous_move = None  # (Piece, start, end)
-
+        self.state_castle = 'kqKQ'
+        self.turn_count = 2
     def __str__(self):
         board_str = '-----------------\n'
         for row in self.board:
@@ -83,13 +84,72 @@ class Board:
             for piece in c:
                 if isinstance(piece, Piece):
                     fen += f"{cnt}{str(piece)}" if cnt != 0 else str(piece)
+                    cnt = 0
                 else:
                     cnt += 1
 
             fen += f"{cnt}/" if cnt != 0 else "/"
-
+        fen = fen[:-1]
         turn = " w" if self.turn == Player.WHITE else " b"
-        return fen[:-1] + turn
+        self.castling_state()
+        castle = ' ' + self.state_castle
+        count = " " + str(self.turn_count // 2)
+        return fen + turn + castle + str(count)
+
+    def castling_state(self):
+
+        if self.state_castle == '-':
+            return
+
+        if self.king[Player.BLACK].moved:
+            print(1)
+            if 'K' in self.state_castle:
+                self.state_castle = self.state_castle.replace('K', '')
+            if 'Q' in self.state_castle:
+                self.state_castle = self.state_castle.replace('Q', '')
+        else:  # 킹이 안움직였으면
+            print(2)
+            if isinstance(self.board[0][0], Rook):
+                if self.board[0][0].moved:
+                    if 'Q' in self.state_castle:
+                        self.state_castle = self.state_castle.replace('Q', '')
+            else:
+                if 'Q' in self.state_castle:
+                    self.state_castle = self.state_castle.replace('Q', '')
+            if isinstance(self.board[0][7], Rook):
+                if self.board[0][7].moved:
+                    if 'K' in self.state_castle:
+                        self.state_castle = self.state_castle.replace('K', '')
+            else:
+                if 'K' in self.state_castle:
+                    self.state_castle = self.state_castle.replace('K', '')
+
+        if self.king[Player.WHITE].moved:
+            print(3)
+            if 'k' in self.state_castle:
+                self.state_castle = self.state_castle.replace('k', '')
+            if 'q' in self.state_castle:
+                self.state_castle = self.state_castle.replace('q', '')
+        else:  # 킹이 안움직였으면
+            print(4)
+            if isinstance(self.board[7][0], Rook):
+                if self.board[7][0].moved:
+                    if 'q' in self.state_castle:
+                        self.state_castle = self.state_castle.replace('q', '')
+            else:
+                if 'q' in self.state_castle:
+                    self.state_castle = self.state_castle.replace('q', '')
+            if isinstance(self.board[7][7], Rook):
+                if self.board[7][7].moved:
+                    if 'k' in self.state_castle:
+                        self.state_castle = self.state_castle.replace('k', '')
+            else:
+                if 'k' in self.state_castle:
+                    self.state_castle = self.state_castle.replace('k', '')
+
+        if len(self.state_castle) == 0:
+            self.state_castle = '-'
+
 
     def convert_to_SAN(self, start, end):
         c1, r1 = start
@@ -192,6 +252,8 @@ class Board:
                 print(f"체크메이트, {self.opp_color()} 승")
             else:
                 print("스테일메이트, 무승부")
+
+        self.turn_count += 1
 
         return True
 
@@ -395,6 +457,7 @@ def is_white(player):
 class Piece:
     def __init__(self, pos: tuple, player: Player, directions):
         self.pos = pos
+        self.came_from = pos
         self.player = player
         self.directions = directions
         self.moved = False
@@ -636,3 +699,4 @@ class King(Piece):
             return 1
 
         return 0
+
