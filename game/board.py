@@ -61,6 +61,9 @@ class Board:
         c, r = pos
         return self.col_SAN(c), self.row_SAN(r)
 
+    def _remove_for_castling(self, kq):
+        print(self.state_castle.replace(kq, ''))
+        return self.state_castle.replace(kq, '') if kq in self.state_castle else self.state_castle
 
     def setting_board(self, board):
         temp = [[None for _ in range(self.size)] for _ in range(self.size)]
@@ -102,50 +105,39 @@ class Board:
             return
 
         if self.king[Player.BLACK].moved:
-            print(1)
-            if 'K' in self.state_castle:
-                self.state_castle = self.state_castle.replace('K', '')
-            if 'Q' in self.state_castle:
-                self.state_castle = self.state_castle.replace('Q', '')
+            self.state_castle = self._remove_for_castling('K')
+            self.state_castle = self._remove_for_castling('Q')
         else:  # 킹이 안움직였으면
-            print(2)
             if isinstance(self.board[0][0], Rook):
                 if self.board[0][0].moved:
-                    if 'Q' in self.state_castle:
-                        self.state_castle = self.state_castle.replace('Q', '')
+                    self.state_castle = self._remove_for_castling('Q')
             else:
-                if 'Q' in self.state_castle:
-                    self.state_castle = self.state_castle.replace('Q', '')
+                self.state_castle = self._remove_for_castling('Q')
+
             if isinstance(self.board[0][7], Rook):
                 if self.board[0][7].moved:
-                    if 'K' in self.state_castle:
-                        self.state_castle = self.state_castle.replace('K', '')
+                    self.state_castle = self._remove_for_castling('K')
+
             else:
-                if 'K' in self.state_castle:
-                    self.state_castle = self.state_castle.replace('K', '')
+                self.state_castle = self._remove_for_castling('K')
 
         if self.king[Player.WHITE].moved:
-            print(3)
-            if 'k' in self.state_castle:
-                self.state_castle = self.state_castle.replace('k', '')
-            if 'q' in self.state_castle:
-                self.state_castle = self.state_castle.replace('q', '')
+            self.state_castle = self._remove_for_castling('k')
+            self.state_castle = self._remove_for_castling('q')
         else:  # 킹이 안움직였으면
-            print(4)
             if isinstance(self.board[7][0], Rook):
                 if self.board[7][0].moved:
-                    if 'q' in self.state_castle:
-                        self.state_castle = self.state_castle.replace('q', '')
+                    self.state_castle = self._remove_for_castling('q')
+
             else:
-                if 'q' in self.state_castle:
-                    self.state_castle = self.state_castle.replace('q', '')
+                self.state_castle = self._remove_for_castling('q')
+
             if isinstance(self.board[7][7], Rook):
                 if self.board[7][7].moved:
-                    if 'k' in self.state_castle:
-                        self.state_castle = self.state_castle.replace('k', '')
+                    self.state_castle = self._remove_for_castling('k')
+
             else:
-                if 'k' in self.state_castle:
-                    self.state_castle = self.state_castle.replace('k', '')
+                self.state_castle = self._remove_for_castling('k')
 
         if len(self.state_castle) == 0:
             self.state_castle = '-'
