@@ -3,8 +3,8 @@ from constant import Player
 
 if __name__ == '__main__':
     b = Board()
-    print(b)
     while True:
+        print(b)
         print(b.turn)
         try:
             _s = tuple(map(lambda x: int(x), input("start:")))
@@ -51,4 +51,4 @@ if __name__ == '__main__':
             continue
 
         b.move(_s, _e)
-        print(b)
+        print(b.convert_to_FEN())

@@ -98,15 +98,15 @@ def main():
     images = {}
     for color in ["w", "b"]:
         for name in ["p", "r", "n", "b", "q", "k"]:
-            filename = f"asset/img/{color}{name}.png"
+            filename = f"../asset/img/{color}{name}.png"
             piece_image = pygame.image.load(filename)
             piece_image = pygame.transform.scale(piece_image, SQUARE_SIZE)
             images[f"{color}{name}"] = piece_image
 
-    board_img = pygame.image.load('asset/img/000.png')
+    board_img = pygame.image.load('../asset/img/000.png')
     board_img = pygame.transform.scale(board_img, SIZE)
 
-    indicator = pygame.image.load("asset/img/001.png")
+    indicator = pygame.image.load("../asset/img/001.png")
     indicator = pygame.transform.scale(indicator, SQUARE_SIZE)
 
     sm = SquareMatrix(main_board)

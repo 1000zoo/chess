@@ -7,7 +7,7 @@ class Board:
         self.king = {Player.WHITE : None, Player.BLACK : None}
         self.board = self.setting_board(board)
         self.turn = turn
-        self.previous_move = None  # (Piece, start, end)
+        self.previous_move = None
         self.state_castle = 'kqKQ'
         self.turn_count = 2
         
@@ -21,6 +21,8 @@ class Board:
         board_str += '-----------------\n'
         return board_str
 
+    def is_white_move(self):
+        return self.turn == Player.WHITE
 
     def right_turn(self, player):
         return self.turn == player
@@ -62,6 +64,14 @@ class Board:
         c, r = pos
         return self.col_SAN(c), self.row_SAN(r)
 
+    ## 배열 좌표형식을 uci인지 뭔지 하는 표기법으로 변환
+    def convert_sq_uci(self, pos):
+        c, r = pos
+        return f"{self.row_SAN(r)}{self.col_SAN(c)}"
+
+    def convert_move_uci(self, start, end):
+        return f"{self.convert_sq_uci(start)}{self.convert_sq_uci(end)}"
+
     def _remove_for_castling(self, kq):
         print(self.state_castle.replace(kq, ''))
         return self.state_castle.replace(kq, '') if kq in self.state_castle else self.state_castle
@@ -94,11 +104,18 @@ class Board:
 
             fen += f"{cnt}/" if cnt != 0 else "/"
         fen = fen[:-1]
-        turn = " w" if self.turn == Player.WHITE else " b"
+        turn = "w" if self.turn == Player.WHITE else "b"
         self.castling_state()
-        castle = ' ' + self.state_castle
-        count = " " + str(self.turn_count // 2)
-        return fen + turn + castle + str(count)
+        castle = self.state_castle
+        count = str(self.turn_count // 2)
+        enp = "-"
+        if self.can_enpassant():
+            enp = self.can_enpassant()
+            enp = self.convert_sq_uci(enp)
+            print(enp)
+
+        return " ".join([fen, turn, castle, enp, count])
+        # return fen + turn + castle + str(count)
 
     def castling_state(self):
 
@@ -254,7 +271,6 @@ class Board:
             # print("가능한 수 X")
             return False
 
-        print(self.convert_to_SAN(start, end))
 
         if piece.is_promotion_line():
             prom_val = c2
@@ -295,7 +311,6 @@ class Board:
             print("가능한 수 X")
             return False
 
-        print(self.convert_to_SAN(start, end))
         ## 캐슬링 움직임 처리
         if isinstance(piece, King):
             _col = 7 if is_white(piece.player) else 0
@@ -427,6 +442,20 @@ class Board:
                         break
 
                     ct, rt = ct + direction[0], rt + direction[1]
+
+        return False
+
+    def can_enpassant(self):
+        if self.previous_move is None:
+            return False
+        piece, start, end = self.previous_move
+        if not isinstance(piece, Pawn):
+            return False
+        sc, sr = start
+        ec, er = end
+
+        if abs(sc - ec) == 2:
+            return (2, sr) if self.is_white_move() else (5, sr)
 
         return False
 
