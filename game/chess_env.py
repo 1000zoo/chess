@@ -2,8 +2,7 @@ import enum
 import numpy as np
 import copy
 from board import *
-
-Winner = enum.Enum("Winner", "black white draw")
+from constant import *
 
 # input planes
 # noinspection SpellCheckingInspection
