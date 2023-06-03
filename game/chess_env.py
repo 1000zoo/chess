@@ -46,7 +46,7 @@ class ChessEnv:
 
     @property
     def white_won(self):
-        return self.winner == Winner.white
+        return self.winner == Done.white
 
     @property
     def white_to_move(self):  ## 화이트 차례
@@ -69,26 +69,26 @@ class ChessEnv:
         if self.winner is None:
             ##self.result = self.board.result(claim_draw = True)
             if self.result == '1-0':
-                self.winner = Winner.white
+                self.winner = Done.white
             elif self.result == '0-1':
-                self.winner = Winner.black
+                self.winner = Done.black
             else:
-                self.winner = Winner.draw
+                self.winner = Done.draw
 
     def adjudicate(self):
         score = self.testeval(absolute = True)
         if abs(score) < 0.01:
-            self.winner = Winner.draw
+            self.winner = Done.draw
             self.result = "1/2-1/2"
         elif score > 0:
-            self.winner = Winner.white
+            self.winner = Done.white
             self.result = "1-0"
         else:
-            self.winner = Winner.black
+            self.winner = Done.black
             self.result = "0-1"
 
     def ending_average_game(self):
-        self.winner = Winner.draw
+        self.winner = Done.draw
         self.result = "1/2-1/2"
 
     def copy(self):

@@ -23,10 +23,11 @@ class Player(Enum):
     WHITE = 0
     BLACK = 1
 
-class Winner(Enum):
+class Done(Enum):
     white = 0
     black = 1
     draw = 2
+    ing = 3
 
 knight_directions = [(2,1), (1,2), (-2,1), (-1,2), (2,-1), (1,-2), (-2,-1),(-1,-2)]
 bishop_directions = [(1,1), (1,-1), (-1,1), (-1,-1)]
