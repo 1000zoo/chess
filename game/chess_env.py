@@ -32,8 +32,10 @@ class ChessEnv:
 
         return self
 
-    def update(self, board):
-        self.FEN = self.board.convert_to_FEN() ##?
+    def update(self, b):
+        self.board = b
+        self.FEN = self.board.convert_to_FEN()
+        print(self.FEN)
         self.winner = None
         self.resigned = False
 
