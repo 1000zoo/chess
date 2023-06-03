@@ -1,6 +1,10 @@
-from models import *
-from chess_env import *
-from config import Config
+
+## 상위 디렉토리 추가
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from game.chess_env import *
+
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Manager, Pipe
 from collections import deque
