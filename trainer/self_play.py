@@ -104,9 +104,9 @@ def self_play_buffer(config, cur) -> (ChessEnv, list):
         if env.num_halfmoves >= config.play.max_game_length:
             env.adjudicate()
 
-    if env.winner == Winner.white:
+    if env.winner == Done.white:
         black_win = -1
-    elif env.winner == Winner.black:
+    elif env.winner == Done.black:
         black_win = 1
     else:
         black_win = 0
