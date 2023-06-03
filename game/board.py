@@ -10,6 +10,7 @@ class Board:
         self.previous_move = None  # (Piece, start, end)
         self.state_castle = 'kqKQ'
         self.turn_count = 2
+        
     def __str__(self):
         board_str = '-----------------\n'
         for row in self.board:
@@ -181,7 +182,6 @@ class Board:
         else:
             pass
 
-
         return san
 
 
@@ -231,14 +231,6 @@ class Board:
         self.previous_move = (piece, start, end)
         self.turn = self.opp_color()
 
-        ##TODO 게임 종료 로직
-        """
-        GameState.MOVE_FAIL
-        GameState.MOVE_SUCCESS
-        GameState.CHECKMATE
-        GameState.STALEMATE
-        출력하도록 수정
-        """
         if self.is_mate():
             if check:
                 print(f"체크메이트, {self.opp_color()} 승")
