@@ -10,6 +10,7 @@ class Board:
         self.previous_move = None
         self.state_castle = 'kqKQ'
         self.turn_count = 2
+        self.done = Done.ing
         
     def __str__(self):
         board_str = '-----------------\n'
@@ -250,8 +251,10 @@ class Board:
 
         if self.is_mate():
             if check:
+                self.done = Done.white if is_white(self.opp_color()) else Done.black
                 print(f"체크메이트, {self.opp_color()} 승")
             else:
+                self.done = Done.draw
                 print("스테일메이트, 무승부")
 
         self.turn_count += 1
