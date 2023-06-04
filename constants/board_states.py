@@ -2,9 +2,9 @@
 class BoardStateForTest:
     init_board = [
         "RNBQKBNR",
-        "PPPPP PP",
-        "     p  ",
-        "     r  ",
+        "PPPPPPPP",
+        "        ",
+        "        ",
         "        ",
         "        ",
         "pppppppp",
@@ -42,6 +42,50 @@ class BoardStateForTest:
         "        ",
         "        ",
         "k       "
+    ]
+
+    promotion_state_for_white = [
+        "        ",
+        "  KP  p ",
+        "        ",
+        "        ",
+        "        ",
+        "        ",
+        "     k  ",
+        "        "
+    ]
+
+    promotion_state_for_black = [
+        "        ",
+        "  KP  p ",
+        "        ",
+        "        ",
+        "        ",
+        "        ",
+        "  P  k  ",
+        "        "
+    ]
+
+    fifty_moves_test = [
+        "RNBQKBNR",
+        "P       ",
+        "        ",
+        "        ",
+        "        ",
+        "        ",
+        "p       ",
+        "rnbqkbnr"
+    ]
+
+    castling_test_origin = [
+        "R   K  R",
+        "PP      ",
+        "        ",
+        "        ",
+        "        ",
+        "        ",
+        "    pppp",
+        "r   k  r"
     ]
 
 

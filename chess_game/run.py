@@ -5,7 +5,8 @@ if __name__ == '__main__':
     b = Board()
     while not b.done:
         print(b)
-        print(b.turn)
+        print(b.convert_to_FEN())
+        print(b.get_all_moves())
         try:
             _s = tuple(map(lambda x: int(x), input("start:")))
             if len(_s) != 2:
@@ -51,5 +52,5 @@ if __name__ == '__main__':
             continue
 
         b.move(_s, _e)
-        print(b.convert_to_FEN())
+
     print(b.winner)

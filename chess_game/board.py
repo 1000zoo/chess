@@ -11,6 +11,7 @@ class Board:
         self.state_castle = 'kqKQ'
         self.turn_count = 2
         self.winner = Done.ing
+        self.fifty_moves = 0
         
     def __str__(self):
         board_str = '-----------------\n'
@@ -26,7 +27,10 @@ class Board:
     def done(self):
         return self.winner != Done.ing
 
-    def is_white_move(self):
+    def reset_fifty_moves(self):
+        self.fifty_moves = 0
+
+    def white_to_move(self):
         return self.turn == Player.WHITE
 
     def right_turn(self, player):
@@ -77,8 +81,12 @@ class Board:
         return self.col_SAN(c), self.row_SAN(r)
 
     def get_coor(self, pos: str):   #ex) pos = "a1"
-        ## start, end -> (tuple(int, int), tuple(int, int))
-        ##TODO: Promotion
+        ## start, end -> (tuple(int, int) or tuple(str, int) (case promotion))
+        if len(pos) == 3:
+            prom = pos[-1]
+            prom = prom.lower() if self.white_to_move() else prom.upper()
+            return prom, self.row_uci(pos[0])
+
         return self.col_uci(int(pos[1])), self.row_uci(pos[0])
 
     def uci_to_coor(self, uci):
@@ -90,12 +98,17 @@ class Board:
         return f"{self.row_SAN(r)}{self.col_SAN(c)}"
 
     ## 시작, 끝 좌표를 uci표기법으로
-    def uci_move(self, start, end, prom=""):
-        ##TODO: promotion
+    def uci_move(self, start, end):
+        def _prom(_e):
+            p, er = _e
+            ec = 0 if self.white_to_move() else 7
+            return (ec, er), p.lower()
+
+        end, prom = _prom(end) if isinstance(end[0], str) else (end, "")
+
         return f"{self.coor_to_uci(start)}{self.coor_to_uci(end)}{prom}"
 
     def _remove_for_castling(self, kq):
-        print(self.state_castle.replace(kq, ''))
         return self.state_castle.replace(kq, '') if kq in self.state_castle else self.state_castle
 
     def setting_board(self, board):
@@ -131,12 +144,13 @@ class Board:
         castle = self.state_castle
         count = str(self.turn_count // 2)
         enp = "-"
+        ffm = str(self.fifty_moves)
         if self.can_enpassant():
             enp = self.can_enpassant()
             enp = self.coor_to_uci(enp)
             print(enp)
 
-        return " ".join([fen, turn, castle, enp, count])
+        return " ".join([fen, turn, castle, enp, ffm, count])
 
     def castling_state(self):
 
@@ -224,27 +238,29 @@ class Board:
 
 
     def get_all_moves(self):
-        results = {}
-        for col in self.board:
-            for row in col:
+        results = []
+        for i, col in enumerate(self.board):
+            for j, row in enumerate(col):
                 if isinstance(row, Piece) and self.right_turn(row.player):
-                    results[row] = row.get_legal_moves(self)
+                    temp = [f"{self.uci_move((i, j), end)}" for end in row.get_legal_moves(self)]
+                    results.extend(temp)
         return results
 
+
     def is_mate(self):
-        all_legal_moves = self.get_all_moves()
+        return len(self.get_all_moves()) == 0
 
-        for pos in all_legal_moves:
-            if not all_legal_moves[pos]:
-                continue
-            else:
-                return False
 
-        return True
+    def push_uci(self, action):
+        start, end = self.uci_to_coor(action)
+        return self.move(start, end)
+
 
     def move(self, start, end):
         c1, r1 = start
+        c2, r2 = end
         piece = self.board[c1][r1]
+        opp = self.board[c2][r2]
 
         if not self.is_occupied(start):
             # print("아무것도 없는 칸")
@@ -253,12 +269,20 @@ class Board:
             # print("플레이어의 기물 X.")
             return False
 
+        is_opp = isinstance(opp, Piece) and self.is_enemy(end, self.turn)
+
         if isinstance(piece, Pawn):
             if not self.move_pawn(start, end):
                 return False
         else:
             if not self.move_piece(start, end):
                 return False
+
+        ## fiftymoves
+        if is_opp or isinstance(piece, Pawn):
+            self.reset_fifty_moves()
+        else:
+            self.fifty_moves += 1
 
         check = False
         if self.final_check():
@@ -476,9 +500,11 @@ class Board:
             return False
         sc, sr = start
         ec, er = end
+        if isinstance(ec, str):
+            return False
 
         if abs(sc - ec) == 2:
-            return (2, sr) if self.is_white_move() else (5, sr)
+            return (2, sr) if self.white_to_move() else (5, sr)
 
         return False
 
