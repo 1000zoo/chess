@@ -32,7 +32,7 @@ class TrainWorker:
                 game_idx += 1
                 start_time = time()
                 env, data = futures.popleft().result()
-                print(f"game {game_idx:3} time={time() - start_time:5.1f}s "
+                print(f"chess_game {game_idx:3} time={time() - start_time:5.1f}s "
                     f"halfmoves={env.num_halfmoves:3} {env.winner:12} "
                     f"{'by resign ' if env.resigned else '          '}")
 
@@ -82,10 +82,10 @@ class TrainWorker:
 
 def self_play_buffer(config, cur) -> (ChessEnv, list):
     """
-    Play one game and add the play data to the buffer
+    Play one chess_game and add the play data to the buffer
     :param Config config: config for how to play
     :param list(Connection) cur: list of pipes to use to get a pipe to send observations to for getting
-        predictions. One will be removed from this list during the game, then added back
+        predictions. One will be removed from this list during the chess_game, then added back
     :return (ChessEnv,list((str,list(float)): a tuple containing the final ChessEnv state and then a list
         of data to be appended to the SelfPlayWorker.buffer
     """

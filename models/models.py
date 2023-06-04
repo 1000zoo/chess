@@ -21,7 +21,7 @@ logger = getLogger(__name__)
 ## https://github.com/Zeta36/chess-alpha-zero/blob/master/src/chess_zero/agent/model_chess.py
 class ChessModel:
     """
-    The model which can be trained to take observations of a game of chess and return value and policy
+    The model which can be trained to take observations of a chess_game of chess and return value and policy
     predictions.
 
     Attributes:

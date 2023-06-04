@@ -192,7 +192,7 @@ def canon_input_planes(fen):
     """
 
     :param fen:
-    :return : (18, 8, 8) representation of the game state
+    :return : (18, 8, 8) representation of the chess_game state
     """
     fen = maybe_flip_fen(fen, is_black_turn(fen))
     return all_input_planes(fen)
