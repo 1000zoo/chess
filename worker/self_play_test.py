@@ -1,19 +1,47 @@
-
-## 상위 디렉토리 추가
-import sys, os
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-
-from game.chess_env import *
-
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import Manager, Pipe
+"""
+Holds the worker which trains the chess model using self play data.
+"""
 from collections import deque
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Manager
+from threading import Thread
+from time import time
 
-class TrainWorker:
+from agent.model_chess import *
+from constants.config import Config
+from constants.constant import Done
+from env.chess_env import ChessEnv
+from agent.player_chess import ChessPlayer
+from helper.model_helper import *
+from helper.data_helper import *
+
+logger = getLogger(__name__)
+
+
+def start(config: Config):
+    return SelfPlayWorker(config).start()
+
+
+# noinspection PyAttributeOutsideInit
+class SelfPlayWorker:
+    """
+    Worker which trains a chess model using self play data. ALl it does is do self play and then write the
+    game data to file, to be trained on by the optimize worker.
+
+    Attributes:
+        :ivar Config config: config to use to configure this worker
+        :ivar ChessModel current_model: model to use for self play
+        :ivar Manager m: the manager to use to coordinate between other workers
+        :ivar list(Connection) cur_pipes: pipes to send observations to and get back mode predictions.
+        :ivar list((str,list(float))): list of all the moves. Each tuple has the observation in FEN format and
+            then the list of prior probabilities for each action, given by the visit count of each of the states
+            reached by the action (actions indexed according to how they are ordered in the uci move list).
+    """
     def __init__(self, config: Config):
         self.config = config
         self.current_model = self.load_model()
         self.m = Manager()
+        ##수정
         self.cur_pipes = self.m.list([self.current_model.get_pipes(self.config.play.search_threads) for _ in range(self.config.play.max_processes)])
         self.buffer = []
 
@@ -32,11 +60,10 @@ class TrainWorker:
                 game_idx += 1
                 start_time = time()
                 env, data = futures.popleft().result()
-                print(f"chess_game {game_idx:3} time={time() - start_time:5.1f}s "
+                print(f"game {game_idx:3} time={time() - start_time:5.1f}s "
                     f"halfmoves={env.num_halfmoves:3} {env.winner:12} "
                     f"{'by resign ' if env.resigned else '          '}")
 
-                pretty_print(env, ("current_model", "current_model"))
                 self.buffer += data
                 if (game_idx % self.config.play_data.nb_game_in_file) == 0:
                     self.flush_buffer()
@@ -46,13 +73,14 @@ class TrainWorker:
         # if len(data) > 0:
         #     self.flush_buffer()
 
-    def load_model(self):
+    @staticmethod
+    def load_model():
         """
         Load the current best model
         :return ChessModel: current best model
         """
-        model = ChessModel(self.config)
-        if self.config.opts.new or not load_best_model_weight(model):
+        model = ChessModel()
+        if not load_best_model_weight(model):
             model.build()
             save_as_best_model(model)
         return model
@@ -82,10 +110,10 @@ class TrainWorker:
 
 def self_play_buffer(config, cur) -> (ChessEnv, list):
     """
-    Play one chess_game and add the play data to the buffer
+    Play one game and add the play data to the buffer
     :param Config config: config for how to play
     :param list(Connection) cur: list of pipes to use to get a pipe to send observations to for getting
-        predictions. One will be removed from this list during the chess_game, then added back
+        predictions. One will be removed from this list during the game, then added back
     :return (ChessEnv,list((str,list(float)): a tuple containing the final ChessEnv state and then a list
         of data to be appended to the SelfPlayWorker.buffer
     """
@@ -122,6 +150,3 @@ def self_play_buffer(config, cur) -> (ChessEnv, list):
 
     cur.append(pipes)
     return env, data
-
-if __name__ == '__main__':
-    pass
