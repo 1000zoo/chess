@@ -77,8 +77,12 @@ class Board:
         return self.col_SAN(c), self.row_SAN(r)
 
     def get_coor(self, pos: str):   #ex) pos = "a1"
-        ## start, end -> (tuple(int, int), tuple(int, int))
-        ##TODO: Promotion
+        ## start, end -> (tuple(int, int) or tuple(str, int) (case promotion))
+        if len(pos) == 3:
+            prom = pos[-1]
+            prom = prom.lower() if self.white_to_move() else prom.upper()
+            return prom, self.row_uci(pos[0])
+
         return self.col_uci(int(pos[1])), self.row_uci(pos[0])
 
     def uci_to_coor(self, uci):
@@ -237,16 +241,15 @@ class Board:
                     results.extend(temp)
         return results
 
-    # def get_all_moves(self):
-    #     results = {}
-    #     for col in self.board:
-    #         for row in col:
-    #             if isinstance(row, Piece) and self.right_turn(row.player):
-    #                 results[row] = row.get_legal_moves(self)
-    #     return results
 
     def is_mate(self):
         return len(self.get_all_moves()) == 0
+
+
+    def push_uci(self, action):
+        start, end = self.uci_to_coor(action)
+        return self.move(start, end)
+
 
     def move(self, start, end):
         c1, r1 = start
