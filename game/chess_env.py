@@ -1,8 +1,7 @@
-import enum
 import numpy as np
 import copy
 from board import *
-from constant import *
+from game.constants.constant import *
 
 # input planes
 # noinspection SpellCheckingInspection

@@ -1,9 +1,9 @@
 from board import *
-from constant import *
+from game.constants.constant import *
 
 if __name__ == '__main__':
     b = Board()
-    while b.done == Done.ing:
+    while not b.done:
         print(b)
         print(b.turn)
         try:
@@ -52,4 +52,4 @@ if __name__ == '__main__':
 
         b.move(_s, _e)
         print(b.convert_to_FEN())
-    print(b.done)
+    print(b.winner)

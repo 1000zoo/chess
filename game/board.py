@@ -1,4 +1,4 @@
-from constant import *
+from game.constants.constant import *
 
 class Board:
     def __init__(self, board=init_board, turn=Player.WHITE):
@@ -10,7 +10,7 @@ class Board:
         self.previous_move = None
         self.state_castle = 'kqKQ'
         self.turn_count = 2
-        self.done = Done.ing
+        self.winner = Done.ing
         
     def __str__(self):
         board_str = '-----------------\n'
@@ -21,6 +21,10 @@ class Board:
             board_str += '\n'
         board_str += '-----------------\n'
         return board_str
+
+    @property
+    def done(self):
+        return self.winner != Done.ing
 
     def is_white_move(self):
         return self.turn == Player.WHITE
@@ -267,10 +271,10 @@ class Board:
 
         if self.is_mate():
             if check:
-                self.done = Done.white if is_white(self.opp_color()) else Done.black
+                self.winner = Done.white if is_white(self.opp_color()) else Done.black
                 print(f"체크메이트, {self.opp_color()} 승")
             else:
-                self.done = Done.draw
+                self.winner = Done.draw
                 print("스테일메이트, 무승부")
 
         self.turn_count += 1
