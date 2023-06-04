@@ -1,25 +1,7 @@
 from enum import Enum
+from game.constants.board_states import BoardStateForTest
 
-# init_board = [['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-#               ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-#               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-#               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-#               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-#               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-#               ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-#               ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']]
-
-
-init_board = [
-    "RNBQKBNR",
-    "PPPPP PP",
-    "     p  ",
-    "     r  ",
-    "        ",
-    "        ",
-    "pppppppp",
-    "rnbqkbnr"
-]
+init_board = BoardStateForTest.g3g2_stalemate_draw
 
 
 classname_of_pieces = {
