@@ -11,6 +11,7 @@ class Board:
         self.state_castle = 'kqKQ'
         self.turn_count = 2
         self.winner = Done.ing
+        self.fifty_moves = 0
         
     def __str__(self):
         board_str = '-----------------\n'
@@ -25,6 +26,9 @@ class Board:
     @property
     def done(self):
         return self.winner != Done.ing
+
+    def reset_fifty_moves(self):
+        self.fifty_moves = 0
 
     def white_to_move(self):
         return self.turn == Player.WHITE
@@ -140,12 +144,13 @@ class Board:
         castle = self.state_castle
         count = str(self.turn_count // 2)
         enp = "-"
+        ffm = str(self.fifty_moves)
         if self.can_enpassant():
             enp = self.can_enpassant()
             enp = self.coor_to_uci(enp)
             print(enp)
 
-        return " ".join([fen, turn, castle, enp, count])
+        return " ".join([fen, turn, castle, enp, ffm, count])
 
     def castling_state(self):
 
@@ -253,7 +258,9 @@ class Board:
 
     def move(self, start, end):
         c1, r1 = start
+        c2, r2 = end
         piece = self.board[c1][r1]
+        opp = self.board[c2][r2]
 
         if not self.is_occupied(start):
             # print("아무것도 없는 칸")
@@ -262,12 +269,20 @@ class Board:
             # print("플레이어의 기물 X.")
             return False
 
+        is_opp = isinstance(opp, Piece) and self.is_enemy(end, self.turn)
+
         if isinstance(piece, Pawn):
             if not self.move_pawn(start, end):
                 return False
         else:
             if not self.move_piece(start, end):
                 return False
+
+        ## fiftymoves
+        if is_opp or isinstance(piece, Pawn):
+            self.reset_fifty_moves()
+        else:
+            self.fifty_moves += 1
 
         check = False
         if self.final_check():
