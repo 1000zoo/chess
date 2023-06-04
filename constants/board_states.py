@@ -66,5 +66,27 @@ class BoardStateForTest:
         "        "
     ]
 
+    fifty_moves_test = [
+        "RNBQKBNR",
+        "P       ",
+        "        ",
+        "        ",
+        "        ",
+        "        ",
+        "p       ",
+        "rnbqkbnr"
+    ]
+
+    castling_test_origin = [
+        "R   K  R",
+        "PP      ",
+        "        ",
+        "        ",
+        "        ",
+        "        ",
+        "    pppp",
+        "r   k  r"
+    ]
+
 
 
