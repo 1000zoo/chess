@@ -1,18 +1,8 @@
+import numpy as np
+import os
 
-
-class Config:
-    def __init__(self):
-        self.labels = create_uci_labels()
-        self.n_labels = len(self.labels)
-        self.l2i = {x : i for i, x in enumerate(self.labels)}
-        self.action = [0 for _ in range(self.n_labels)]
-        self.model = ModelConfig()
-        self.play = PlayConfig()
-        self.play_data = PlayDataConfig()
-        self.trainer = TrainerConfig()
-        self.eval = EvaluateConfig()
-
-
+def flip_policy(pol):
+    return np.asarray([pol[ind] for ind in Config.unflipped_index])
 
 def create_uci_labels():
     """
@@ -51,6 +41,34 @@ def create_uci_labels():
                 labels_array.append(l + '7' + l_r + '8' + p)
     return labels_array
 
+def flipped_uci_labels():
+    """
+    Seems to somehow transform the labels used for describing the universal chess interface format, putting
+    them into a returned list.
+    :return:
+    """
+    def repl(x):
+        return "".join([(str(9 - int(a)) if a.isdigit() else a) for a in x])
+
+    return [repl(x) for x in create_uci_labels()]
+
+
+class Config:
+    labels = create_uci_labels()
+    n_labels = len(labels)
+    flipped_labels = flipped_uci_labels()
+    unflipped_index = None
+    def __init__(self):
+        self.l2i = {x : i for i, x in enumerate(self.labels)}
+        self.action = [0 for _ in range(self.n_labels)]
+        self.model = ModelConfig()
+        self.play = PlayConfig()
+        self.play_data = PlayDataConfig()
+        self.trainer = TrainerConfig()
+        self.eval = EvaluateConfig()
+        self.resource = ResourceConfig()
+
+Config.unflipped_index = [Config.labels.index(x) for x in Config.flipped_labels]
 
 class EvaluateConfig:
     def __init__(self):
@@ -118,8 +136,46 @@ class ModelConfig:
     distributed = False
     input_depth = 18
 
-# k = create_uci_labels()
-# print(len(k))
-# print(k[k[:2]=='a'])
-# print(k)
+
+class Options:
+    new = False
+
+
+class ResourceConfig:
+    """
+    Config describing all of the directories and resources needed during running this project
+    """
+    def __init__(self):
+        self.project_dir = os.environ.get("PROJECT_DIR", _project_dir())
+        self.data_dir = os.environ.get("DATA_DIR", _data_dir())
+
+        self.model_dir = os.environ.get("MODEL_DIR", os.path.join(self.data_dir, "model"))
+        self.model_best_config_path = os.path.join(self.model_dir, "model_best_config.json")
+        self.model_best_weight_path = os.path.join(self.model_dir, "model_best_weight.h5")
+
+        self.next_generation_model_dir = os.path.join(self.model_dir, "next_generation")
+        self.next_generation_model_dirname_tmpl = "model_%s"
+        self.next_generation_model_config_filename = "model_config.json"
+        self.next_generation_model_weight_filename = "model_weight.h5"
+
+        self.play_data_dir = os.path.join(self.data_dir, "play_data")
+        self.play_data_filename_tmpl = "play_%s.json"
+
+        self.log_dir = os.path.join(self.project_dir, "logs")
+        self.main_log_path = os.path.join(self.log_dir, "main.log")
+
+    def create_directories(self):
+        dirs = [self.project_dir, self.data_dir, self.model_dir, self.play_data_dir, self.log_dir,
+                self.next_generation_model_dir]
+        for d in dirs:
+            if not os.path.exists(d):
+                os.makedirs(d)
+
+def _project_dir():
+    d = os.path.dirname
+    return d(d(d(os.path.abspath(__file__))))
+
+def _data_dir():
+    return os.path.join(_project_dir(), "data")
+
 
