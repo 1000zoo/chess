@@ -1,5 +1,5 @@
 from enum import Enum
-from game.constants.board_states import BoardStateForTest
+from constants.board_states import BoardStateForTest
 
 init_board = BoardStateForTest.g3g2_stalemate_draw
 

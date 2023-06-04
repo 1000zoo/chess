@@ -1,5 +1,5 @@
 from board import *
-from game.constants.constant import *
+from constants.constant import *
 
 if __name__ == '__main__':
     b = Board()

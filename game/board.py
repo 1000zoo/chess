@@ -1,4 +1,4 @@
-from game.constants.constant import *
+from constants.constant import *
 
 class Board:
     def __init__(self, board=init_board, turn=Player.WHITE):

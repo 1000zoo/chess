@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 from board import *
-from game.constants.constant import *
+from constants.constant import *
 
 # input planes
 # noinspection SpellCheckingInspection
