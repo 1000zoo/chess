@@ -1,7 +1,7 @@
 from enum import Enum
 from constants.board_states import BoardStateForTest
 
-init_board = BoardStateForTest.g3g2_stalemate_draw
+init_board = BoardStateForTest.init_board
 
 
 classname_of_pieces = {
