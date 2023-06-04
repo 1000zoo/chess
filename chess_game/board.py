@@ -26,7 +26,7 @@ class Board:
     def done(self):
         return self.winner != Done.ing
 
-    def is_white_move(self):
+    def white_to_move(self):
         return self.turn == Player.WHITE
 
     def right_turn(self, player):
@@ -90,12 +90,17 @@ class Board:
         return f"{self.row_SAN(r)}{self.col_SAN(c)}"
 
     ## 시작, 끝 좌표를 uci표기법으로
-    def uci_move(self, start, end, prom=""):
-        ##TODO: promotion
+    def uci_move(self, start, end):
+        def _prom(_e):
+            p, er = _e
+            ec = 0 if self.white_to_move() else 7
+            return (ec, er), p.lower()
+
+        end, prom = _prom(end) if isinstance(end[0], str) else (end, "")
+
         return f"{self.coor_to_uci(start)}{self.coor_to_uci(end)}{prom}"
 
     def _remove_for_castling(self, kq):
-        print(self.state_castle.replace(kq, ''))
         return self.state_castle.replace(kq, '') if kq in self.state_castle else self.state_castle
 
     def setting_board(self, board):
@@ -224,23 +229,24 @@ class Board:
 
 
     def get_all_moves(self):
-        results = {}
-        for col in self.board:
-            for row in col:
+        results = []
+        for i, col in enumerate(self.board):
+            for j, row in enumerate(col):
                 if isinstance(row, Piece) and self.right_turn(row.player):
-                    results[row] = row.get_legal_moves(self)
+                    temp = [f"{self.uci_move((i, j), end)}" for end in row.get_legal_moves(self)]
+                    results.extend(temp)
         return results
 
+    # def get_all_moves(self):
+    #     results = {}
+    #     for col in self.board:
+    #         for row in col:
+    #             if isinstance(row, Piece) and self.right_turn(row.player):
+    #                 results[row] = row.get_legal_moves(self)
+    #     return results
+
     def is_mate(self):
-        all_legal_moves = self.get_all_moves()
-
-        for pos in all_legal_moves:
-            if not all_legal_moves[pos]:
-                continue
-            else:
-                return False
-
-        return True
+        return len(self.get_all_moves()) == 0
 
     def move(self, start, end):
         c1, r1 = start
@@ -476,9 +482,11 @@ class Board:
             return False
         sc, sr = start
         ec, er = end
+        if isinstance(ec, str):
+            return False
 
         if abs(sc - ec) == 2:
-            return (2, sr) if self.is_white_move() else (5, sr)
+            return (2, sr) if self.white_to_move() else (5, sr)
 
         return False
 
