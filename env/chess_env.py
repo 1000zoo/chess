@@ -161,8 +161,8 @@ def check_current_planes(realfen, planes):
                     fakefen[rank * 8 + file] = pieces_order[i]
 
     castling = planes[12:16]
-    # fiftymove = planes[16][0][0]
-    ep = planes[16] ##17 -> 16
+    fiftymove = planes[16][0][0]
+    ep = planes[17] ##17 -> 16
 
     castlingstring = ""
     for i in range(4):
@@ -183,7 +183,7 @@ def check_current_planes(realfen, planes):
     assert realparts[1] == 'w'
     assert realparts[2] == castlingstring
     assert realparts[3] == epstr
-    # assert int(realparts[4]) == fiftymove
+    assert int(realparts[4]) == fiftymove
     # realparts[5] is the fifty-move clock, discard that
     return "".join(fakefen) == replace_tags_board(realfen)
 
@@ -204,7 +204,7 @@ def all_input_planes(fen):
     history_both = to_planes(fen)
 
     ret = np.vstack((history_both, current_aux_planes))
-    assert ret.shape == (17, 8, 8)
+    assert ret.shape == (18, 8, 8)
     return ret
 
 
@@ -233,19 +233,19 @@ def aux_planes(fen):
         eps = alg_to_coord(foo[3])
         en_passant[eps[0]][eps[1]] = 1
 
-    # fifty_move_count = int(foo[4])
-    # fifty_move = np.full((8, 8), fifty_move_count, dtype=np.float32)
+    fifty_move_count = int(foo[4])
+    fifty_move = np.full((8, 8), fifty_move_count, dtype=np.float32)
 
     castling = foo[2]
     auxiliary_planes = [np.full((8, 8), int('K' in castling), dtype=np.float32),
                         np.full((8, 8), int('Q' in castling), dtype=np.float32),
                         np.full((8, 8), int('k' in castling), dtype=np.float32),
                         np.full((8, 8), int('q' in castling), dtype=np.float32),
-                        # fifty_move,
+                        fifty_move,
                         en_passant]
 
     ret = np.asarray(auxiliary_planes, dtype=np.float32)
-    assert ret.shape == (5, 8, 8)
+    assert ret.shape == (6, 8, 8)
     return ret
 
 # FEN board is like this:
