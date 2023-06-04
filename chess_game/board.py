@@ -12,6 +12,7 @@ class Board:
         self.turn_count = 2
         self.winner = Done.ing
         self.fifty_moves = 0
+        self.all_legal_moves = self.get_all_moves()
         
     def __str__(self):
         board_str = '-----------------\n'
@@ -26,6 +27,33 @@ class Board:
     @property
     def done(self):
         return self.winner != Done.ing
+
+    @property
+    def fen(self):
+        fen = ""
+        for c in self.board:
+            cnt = 0
+            for piece in c:
+                if isinstance(piece, Piece):
+                    fen += f"{cnt}{str(piece)}" if cnt != 0 else str(piece)
+                    cnt = 0
+                else:
+                    cnt += 1
+
+            fen += f"{cnt}/" if cnt != 0 else "/"
+        fen = fen[:-1]
+        turn = "w" if self.turn == Player.WHITE else "b"
+        self.castling_state()
+        castle = self.state_castle
+        count = str(self.turn_count // 2)
+        enp = "-"
+        ffm = str(self.fifty_moves)
+        if self.can_enpassant():
+            enp = self.can_enpassant()
+            enp = self.coor_to_uci(enp)
+            print(enp)
+
+        return " ".join([fen, turn, castle, enp, ffm, count])
 
     def reset_fifty_moves(self):
         self.fifty_moves = 0
@@ -126,32 +154,6 @@ class Board:
 
         return temp
 
-    def convert_to_FEN(self):
-        fen = ""
-        for c in self.board:
-            cnt = 0
-            for piece in c:
-                if isinstance(piece, Piece):
-                    fen += f"{cnt}{str(piece)}" if cnt != 0 else str(piece)
-                    cnt = 0
-                else:
-                    cnt += 1
-
-            fen += f"{cnt}/" if cnt != 0 else "/"
-        fen = fen[:-1]
-        turn = "w" if self.turn == Player.WHITE else "b"
-        self.castling_state()
-        castle = self.state_castle
-        count = str(self.turn_count // 2)
-        enp = "-"
-        ffm = str(self.fifty_moves)
-        if self.can_enpassant():
-            enp = self.can_enpassant()
-            enp = self.coor_to_uci(enp)
-            print(enp)
-
-        return " ".join([fen, turn, castle, enp, ffm, count])
-
     def castling_state(self):
 
         if self.state_castle == '-':
@@ -248,7 +250,7 @@ class Board:
 
 
     def is_mate(self):
-        return len(self.get_all_moves()) == 0
+        return len(self.all_legal_moves) == 0
 
 
     def push_uci(self, action):
@@ -257,6 +259,7 @@ class Board:
 
 
     def move(self, start, end):
+        self.all_legal_moves = self.get_all_moves()
         c1, r1 = start
         c2, r2 = end
         piece = self.board[c1][r1]

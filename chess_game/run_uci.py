@@ -5,8 +5,8 @@ if __name__ == '__main__':
     b = Board()
     while not b.done:
         print(b)
-        print(b.convert_to_FEN())
-        print(b.get_all_moves())
+        print(b.fen)
+        print(b.all_legal_moves)
 
         action = input("uci-> ")
         b.push_uci(action)
