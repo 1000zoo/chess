@@ -12,7 +12,6 @@ class Board:
         self.turn_count = 2
         self.winner = Done.ing
         self.fifty_moves = 0
-        self.all_legal_moves = self.get_all_moves()
         
     def __str__(self):
         board_str = '-----------------\n'
@@ -26,7 +25,20 @@ class Board:
 
     @property
     def done(self):
+        if self.is_only_king:
+            self.winner = Done.draw
+
         return self.winner != Done.ing
+
+    @property
+    def is_only_king(self):
+        num = 0
+        for c in self.board:
+            for piece in c:
+                if isinstance(piece, Piece):
+                    num += 1
+
+        return num == 2
 
     @property
     def fen(self):
@@ -51,7 +63,6 @@ class Board:
         if self.can_enpassant():
             enp = self.can_enpassant()
             enp = self.coor_to_uci(enp)
-            print(enp)
 
         return " ".join([fen, turn, castle, enp, ffm, count])
 
@@ -250,7 +261,7 @@ class Board:
 
 
     def is_mate(self):
-        return len(self.all_legal_moves) == 0
+        return len(self.get_all_moves()) == 0
 
 
     def push_uci(self, action):
@@ -259,11 +270,14 @@ class Board:
 
 
     def move(self, start, end):
-        self.all_legal_moves = self.get_all_moves()
         c1, r1 = start
         c2, r2 = end
         piece = self.board[c1][r1]
-        opp = self.board[c2][r2]
+
+        if isinstance(c2, str):
+            opp = None
+        else:
+            opp = self.board[c2][r2]
 
         if not self.is_occupied(start):
             # print("아무것도 없는 칸")
@@ -323,7 +337,7 @@ class Board:
 
 
         if piece.is_promotion_line():
-            prom_val = c2
+            prom_val = c2.lower()
             nc = 0 if self.turn == Player.WHITE else 7
             ne = (nc, r2)
             prom_piece = globals()[classname_of_pieces[prom_val]](ne, self.turn)
