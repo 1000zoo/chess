@@ -2,9 +2,9 @@
 class BoardStateForTest:
     init_board = [
         "RNBQKBNR",
-        "PPPPP PP",
-        "     p  ",
-        "     r  ",
+        "PPPPPPPP",
+        "        ",
+        "        ",
         "        ",
         "        ",
         "pppppppp",
@@ -42,6 +42,28 @@ class BoardStateForTest:
         "        ",
         "        ",
         "k       "
+    ]
+
+    promotion_state_for_white = [
+        "        ",
+        "  KP  p ",
+        "        ",
+        "        ",
+        "        ",
+        "        ",
+        "     k  ",
+        "        "
+    ]
+
+    promotion_state_for_black = [
+        "        ",
+        "  KP  p ",
+        "        ",
+        "        ",
+        "        ",
+        "        ",
+        "  P  k  ",
+        "        "
     ]
 
 
