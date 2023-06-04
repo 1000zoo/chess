@@ -15,51 +15,69 @@ ind = {pieces_order[i]: i for i in range(12)}
 class ChessEnv:
     def __init__(self):
         self.board = None
-        self.FEN = None
         self.num_halfmoves = 0
-        self.winner = None
         self.resigned = False
         self.result = None
 
-    def reset(self):
-        self.board = Board()
-        self.FEN = self.board.convert_to_FEN()
-        self.num_halfmoves = 0
-        self.winner = None
-        self.resigned = False
-
-        return self
-
-    def update(self, b):
-        self.board = b
-        self.FEN = self.board.convert_to_FEN()
-        print(self.FEN)
-        self.winner = None
-        self.resigned = False
-
-        return self
+    def __str__(self):
+        return str(self.board)
 
     @property
     def done(self):
-        return self.winner is not None
+        return self.board.done
+
+    @property
+    def all_legal_moves(self):
+        return self.board.get_all_moves()
 
     @property
     def white_won(self):
         return self.winner == Done.white
 
     @property
+    def winner(self):
+        return self.board.winner
+
+    @winner.setter
+    def winner(self, win: Done):
+        self.board.winner = win
+
+    @property
     def white_to_move(self):  ## 화이트 차례
         return self.board.turn == self.board.WHITE
 
-    def step(self, action: str, check_over = True):
+    @property
+    def turn(self):
+        return self.board.turn
 
-        # if check_over and action in None: ##항복하는 거라 필요없을 듯
-        #     self.resign()
-        #     return
+    @property
+    def fen(self):
+        return self.board.fen
+
+    def reset(self):
+        self.board = Board()
+        self.num_halfmoves = 0
+        self.resigned = False
+
+        return self
+
+    def update(self, b):
+        self.board = b
+        self.resigned = False
+
+        return self
+
+
+    def step(self, action: str, check_over = True):
+        assert 4 <= len(action) <= 5
+        if check_over and action is None: ##항복하는 거라 필요없을 듯
+            self._resign()
+            return
 
         self.board.push_uci(action)
 
         self.num_halfmoves += 1
+        self.check_fifty_moves()
 
         if check_over:
             self._game_over()
@@ -73,6 +91,19 @@ class ChessEnv:
                 self.winner = Done.black
             else:
                 self.winner = Done.draw
+
+    def _resign(self):
+        self.resigned = True
+        if self.white_to_move: # WHITE RESIGNED!
+            self.winner = Done.black
+            self.result = "0-1"
+        else:
+            self.winner = Done.white
+            self.result = "1-0"
+
+    def check_fifty_moves(self):
+        if self.board.fifty_moves >= 50:
+            self.winner = Done.draw
 
     def adjudicate(self):
         score = self.testeval(absolute = True)
@@ -102,30 +133,30 @@ class ChessEnv:
 
     @property
     def observation(self):
-        return self.FEN
+        return self.fen
 
     def deltamove(self, fen_next):
         moves = list(self.board.legal_moves)
         for mov in moves:
             self.board.push(mov)
-            fee = self.FEN
+            fee = self.fen
             self.board.pop()
             if fee == fen_next:
                 return mov.uci()
         return None
 
     def replace_tags(self):
-        return replace_tags_board(self.FEN)
+        return replace_tags_board(self.fen)
 
     def canonical_input_planes(self):
         """
 
         :return: a representation of the board using an (18, 8, 8) shape, good as input to a policy / value network
         """
-        return canon_input_planes(self.FEN)
+        return canon_input_planes(self.fen)
 
     def testeval(self, absolute=False) -> float:
-        return testeval(self.FEN, absolute)
+        return testeval(self.fen, absolute)
 
 
 def testeval(fen, absolute = False) -> float:
