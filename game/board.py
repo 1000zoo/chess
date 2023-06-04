@@ -57,21 +57,38 @@ class Board:
     def col_SAN(self, c):
         return str(self.size - c)
 
+    def col_uci(self, c):
+        return int(self.size - c)
+
     @staticmethod
     def row_SAN(r):
         return str(chr(r + ord('a')))
+
+    @staticmethod
+    def row_uci(r):
+        return int(ord(r) - ord('a'))
 
     def get_SAN(self, pos):
         c, r = pos
         return self.col_SAN(c), self.row_SAN(r)
 
-    ## 배열 좌표형식을 uci인지 뭔지 하는 표기법으로 변환
-    def convert_sq_uci(self, pos):
+    def get_coor(self, pos: str):   #ex) pos = "a1"
+        ## start, end -> (tuple(int, int), tuple(int, int))
+        ##TODO: Promotion
+        return self.col_uci(int(pos[1])), self.row_uci(pos[0])
+
+    def uci_to_coor(self, uci):
+        return self.get_coor(uci[:2]), self.get_coor(uci[2:])
+
+    ## 배열 좌표형식을 uci 표기법으로 변환
+    def coor_to_uci(self, pos):
         c, r = pos
         return f"{self.row_SAN(r)}{self.col_SAN(c)}"
 
-    def convert_move_uci(self, start, end):
-        return f"{self.convert_sq_uci(start)}{self.convert_sq_uci(end)}"
+    ## 시작, 끝 좌표를 uci표기법으로
+    def uci_move(self, start, end, prom=""):
+        ##TODO: promotion
+        return f"{self.coor_to_uci(start)}{self.coor_to_uci(end)}{prom}"
 
     def _remove_for_castling(self, kq):
         print(self.state_castle.replace(kq, ''))
@@ -112,11 +129,10 @@ class Board:
         enp = "-"
         if self.can_enpassant():
             enp = self.can_enpassant()
-            enp = self.convert_sq_uci(enp)
+            enp = self.coor_to_uci(enp)
             print(enp)
 
         return " ".join([fen, turn, castle, enp, count])
-        # return fen + turn + castle + str(count)
 
     def castling_state(self):
 
