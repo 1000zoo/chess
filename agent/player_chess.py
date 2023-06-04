@@ -371,5 +371,5 @@ def state_key(env: ChessEnv) -> str:
     :param ChessEnv env: env to encode
     :return str: a str representation of the game state
     """
-    fen = env.board.fen().rsplit(' ', 1)  # drop the move clock
+    fen = env.fen.rsplit(' ', 1)  # drop the move clock
     return fen[0]

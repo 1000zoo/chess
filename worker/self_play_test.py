@@ -73,13 +73,12 @@ class SelfPlayWorker:
         # if len(data) > 0:
         #     self.flush_buffer()
 
-    @staticmethod
-    def load_model():
+    def load_model(self):
         """
         Load the current best model
         :return ChessModel: current best model
         """
-        model = ChessModel()
+        model = ChessModel(self.config)
         if not load_best_model_weight(model):
             model.build()
             save_as_best_model(model)

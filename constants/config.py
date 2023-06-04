@@ -173,9 +173,9 @@ class ResourceConfig:
 
 def _project_dir():
     d = os.path.dirname
-    return d(d(d(os.path.abspath(__file__))))
+    return d(d(d(d(os.path.abspath(__file__)))))
 
 def _data_dir():
-    return os.path.join(_project_dir(), "data")
+    return os.path.join(_project_dir(), "chessAI_data")
 
 

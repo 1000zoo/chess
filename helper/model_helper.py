@@ -1,10 +1,8 @@
 
 
 def load_best_model_weight(model):
-    """
-    :param chess_zero.agent.model.ChessModel model:
-    :return:
-    """
+    if model.model is None:
+        return False
     return model.load(model.config.resource.model_best_config_path, model.config.resource.model_best_weight_path)
 
 

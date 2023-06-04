@@ -44,7 +44,7 @@ class ChessEnv:
 
     @property
     def white_to_move(self):  ## 화이트 차례
-        return self.board.turn == self.board.WHITE
+        return self.board.white_to_move()
 
     @property
     def turn(self):
@@ -313,7 +313,6 @@ def coord_to_alg(coord):
 
 def to_planes(fen):
     board_state = replace_tags_board(fen)
-    print(board_state)
     pieces_both = np.zeros(shape=(12, 8, 8), dtype=np.float32)
     for rank in range(8):
         for file in range(8):
