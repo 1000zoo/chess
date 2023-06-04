@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-from board import *
+from chess_game.board import *
 from constants.constant import *
 
 # input planes
