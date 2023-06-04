@@ -5,8 +5,8 @@ from constants.constant import *
 
 # input planes
 # noinspection SpellCheckingInspection
-pieces_order = 'KQRBNPkqrbnp' # 12x8x8
-castling_order = 'KQkq'       # 4x8x8
+pieces_order = 'kqrbnpKQRBNP' # 12x8x8
+castling_order = 'kqKQ'       # 4x8x8
 # fifty-move-rule             # 1x8x8
 # en en_passant               # 1x8x8
 
@@ -282,6 +282,7 @@ def coord_to_alg(coord):
 
 def to_planes(fen):
     board_state = replace_tags_board(fen)
+    print(board_state)
     pieces_both = np.zeros(shape=(12, 8, 8), dtype=np.float32)
     for rank in range(8):
         for file in range(8):
