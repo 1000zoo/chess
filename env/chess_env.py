@@ -2,6 +2,8 @@ import numpy as np
 import copy
 from chess_game.board import *
 from constants.constant import *
+from constants.config import Config
+import enum
 
 # input planes
 # noinspection SpellCheckingInspection
@@ -9,6 +11,7 @@ pieces_order = 'kqrbnpKQRBNP' # 12x8x8
 castling_order = 'kqKQ'       # 4x8x8
 # fifty-move-rule             # 1x8x8
 # en en_passant               # 1x8x8
+Winner = enum.Enum("Winner", "black white draw")
 
 ind = {pieces_order[i]: i for i in range(12)}
 
@@ -25,6 +28,14 @@ class ChessEnv:
     @property
     def done(self):
         return self.board.done
+
+    @property
+    def all_legal_moves_onehot(self):
+        labels = Config().labels if self.white_to_move else Config().flipped_labels
+        legal_moves = self.all_legal_moves
+        onehot = [1 if move in legal_moves else 0 for move in labels]
+
+        return np.array(onehot)
 
     @property
     def all_legal_moves(self):
@@ -52,7 +63,7 @@ class ChessEnv:
 
     @property
     def fen(self):
-        return self.board.fen
+        return self.board.fen()
 
     def reset(self):
         self.board = Board()
@@ -69,28 +80,15 @@ class ChessEnv:
 
 
     def step(self, action: str, check_over = True):
-        assert 4 <= len(action) <= 5
-        if check_over and action is None: ##항복하는 거라 필요없을 듯
+        if check_over and action is None:
             self._resign()
             return
 
         self.board.push_uci(action)
 
         self.num_halfmoves += 1
-        self.check_fifty_moves()
+        # self.check_fifty_moves()
 
-        if check_over:
-            self._game_over()
-
-    def _game_over(self):
-        if self.winner is None:
-            ##self.result = self.board.result(claim_draw = True)
-            if self.result == '1-0':
-                self.winner = Done.white
-            elif self.result == '0-1':
-                self.winner = Done.black
-            else:
-                self.winner = Done.draw
 
     def _resign(self):
         self.resigned = True
@@ -123,7 +121,7 @@ class ChessEnv:
 
     def copy(self):
         env = copy.copy(self)
-        env.board = copy.copy(self.board)
+        env.board = copy.deepcopy(self.board)
         return env
 
     def render(self):

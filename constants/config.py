@@ -1,8 +1,10 @@
 import numpy as np
 import os
 
+
 def flip_policy(pol):
     return np.asarray([pol[ind] for ind in Config.unflipped_index])
+
 
 def create_uci_labels():
     """
@@ -41,12 +43,14 @@ def create_uci_labels():
                 labels_array.append(l + '7' + l_r + '8' + p)
     return labels_array
 
+
 def flipped_uci_labels():
     """
     Seems to somehow transform the labels used for describing the universal chess interface format, putting
     them into a returned list.
     :return:
     """
+
     def repl(x):
         return "".join([(str(9 - int(a)) if a.isdigit() else a) for a in x])
 
@@ -58,8 +62,9 @@ class Config:
     n_labels = len(labels)
     flipped_labels = flipped_uci_labels()
     unflipped_index = None
+
     def __init__(self):
-        self.l2i = {x : i for i, x in enumerate(self.labels)}
+        self.l2i = {x: i for i, x in enumerate(self.labels)}
         self.action = [0 for _ in range(self.n_labels)]
         self.model = ModelConfig()
         self.play = PlayConfig()
@@ -68,7 +73,9 @@ class Config:
         self.eval = EvaluateConfig()
         self.resource = ResourceConfig()
 
+
 Config.unflipped_index = [Config.labels.index(x) for x in Config.flipped_labels]
+
 
 class EvaluateConfig:
     def __init__(self):
@@ -76,19 +83,19 @@ class EvaluateConfig:
         self.game_num = 50
         self.replace_rate = 0.55
         self.play_config = PlayConfig()
-        self.play_config.simulation_num_per_move = 200
+        self.play_config.simulation_num_per_move = 400
         self.play_config.thinking_loop = 1
-        self.play_config.c_puct = 1 # lower  = prefer mean action value
-        self.play_config.tau_decay_rate = 0.6 # I need a better distribution...
+        self.play_config.c_puct = 1  # lower  = prefer mean action value
+        self.play_config.tau_decay_rate = 0.6  # I need a better distribution...
         self.play_config.noise_eps = 0
         self.evaluate_latest_first = True
-        self.max_game_length = 1000
+        self.max_game_length = 500
 
 
 class PlayDataConfig:
     def __init__(self):
-        self.min_elo_policy = 500 # 0 weight
-        self.max_elo_policy = 1800 # 1 weight
+        self.min_elo_policy = 500  # 0 weight
+        self.max_elo_policy = 1800  # 1 weight
         self.sl_nb_game_in_file = 250
         self.nb_game_in_file = 50
         self.max_file_num = 150
@@ -99,7 +106,7 @@ class PlayConfig:
         self.max_processes = 3
         self.search_threads = 16
         self.vram_frac = 1.0
-        self.simulation_num_per_move = 800
+        self.simulation_num_per_move = 200
         self.thinking_loop = 1
         self.logging_thinking = False
         self.c_puct = 1.5
@@ -109,21 +116,21 @@ class PlayConfig:
         self.virtual_loss = 3
         self.resign_threshold = -0.8
         self.min_resign_turn = 5
-        self.max_game_length = 1000
+        self.max_game_length = 200
 
 
 class TrainerConfig:
     def __init__(self):
         self.min_data_size_to_learn = 0
-        self.cleaning_processes = 5 # RAM explosion...
+        self.cleaning_processes = 4  # RAM explosion...
         self.vram_frac = 1.0
-        self.batch_size = 384 # tune this to your gpu memory
+        self.batch_size = 274  # tune this to your gpu memory
         self.epoch_to_checkpoint = 1
-        self.dataset_size = 100000
+        self.dataset_size = 10000
         self.start_total_steps = 0
         self.save_model_steps = 25
         self.load_data_steps = 100
-        self.loss_weights = [1.25, 1.0] # [policy, value] prevent value overfit in SL
+        self.loss_weights = [1.25, 1.0]  # [policy, value] prevent value overfit in SL
 
 
 class ModelConfig:
@@ -145,11 +152,13 @@ class ResourceConfig:
     """
     Config describing all of the directories and resources needed during running this project
     """
-    def __init__(self):
-        self.project_dir = os.environ.get("PROJECT_DIR", _project_dir())
-        self.data_dir = os.environ.get("DATA_DIR", _data_dir())
 
-        self.model_dir = os.environ.get("MODEL_DIR", os.path.join(self.data_dir, "model"))
+    def __init__(self):
+        total_data_path = "C:/Users/cjswl/python_data/chessAI_data"
+        self.project_dir = os.path.join(total_data_path, "project")
+        self.data_dir = os.path.join(total_data_path, "data")
+        self.model_dir = os.path.join(total_data_path, "models")
+
         self.model_best_config_path = os.path.join(self.model_dir, "model_best_config.json")
         self.model_best_weight_path = os.path.join(self.model_dir, "model_best_weight.h5")
 
@@ -164,6 +173,8 @@ class ResourceConfig:
         self.log_dir = os.path.join(self.project_dir, "logs")
         self.main_log_path = os.path.join(self.log_dir, "main.log")
 
+        self.create_directories()
+
     def create_directories(self):
         dirs = [self.project_dir, self.data_dir, self.model_dir, self.play_data_dir, self.log_dir,
                 self.next_generation_model_dir]
@@ -171,11 +182,11 @@ class ResourceConfig:
             if not os.path.exists(d):
                 os.makedirs(d)
 
+
 def _project_dir():
     d = os.path.dirname
     return d(d(d(d(os.path.abspath(__file__)))))
 
+
 def _data_dir():
     return os.path.join(_project_dir(), "chessAI_data")
-
-

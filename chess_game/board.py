@@ -12,7 +12,7 @@ class Board:
         self.turn_count = 2
         self.winner = Done.ing
         self.fifty_moves = 0
-        
+
     def __str__(self):
         board_str = '-----------------\n'
         for row in self.board:
@@ -40,7 +40,6 @@ class Board:
 
         return num == 2
 
-    @property
     def fen(self):
         fen = ""
         for c in self.board:
@@ -249,15 +248,17 @@ class Board:
 
         return san
 
-
     def get_all_moves(self):
+        return [move for move in self.legal_moves]
+
+    @property
+    def legal_moves(self):
         results = []
         for i, col in enumerate(self.board):
             for j, row in enumerate(col):
                 if isinstance(row, Piece) and self.right_turn(row.player):
-                    temp = [f"{self.uci_move((i, j), end)}" for end in row.get_legal_moves(self)]
-                    results.extend(temp)
-        return results
+                    for end in row.moves_generator(self):
+                        yield f"{self.uci_move((i, j), end)}"
 
 
     def is_mate(self):
@@ -280,11 +281,14 @@ class Board:
             opp = self.board[c2][r2]
 
         if not self.is_occupied(start):
-            # print("아무것도 없는 칸")
-            return False
+            print(f"빈칸을 선택 {self.uci_move(start, end)}, {piece}\n"
+                  f"{str(self)}")
+            raise KeyError()
+
+
         if piece.player != self.turn:
-            # print("플레이어의 기물 X.")
-            return False
+            print(f"잘못된 플레이어 {start} -> {end}")
+            raise KeyError()
 
         is_opp = isinstance(opp, Piece) and self.is_enemy(end, self.turn)
 
@@ -304,7 +308,6 @@ class Board:
         check = False
         if self.final_check():
             check = True
-            print("체크")
 
         piece.set_position(end)
         self.previous_move = (piece, start, end)
@@ -313,10 +316,10 @@ class Board:
         if self.is_mate():
             if check:
                 self.winner = Done.white if is_white(self.opp_color()) else Done.black
-                print(f"체크메이트, {self.opp_color()} 승")
+                # print(f"체크메이트, {self.opp_color()} 승")
             else:
                 self.winner = Done.draw
-                print("스테일메이트, 무승부")
+                # print("스테일메이트, 무승부")
 
         self.turn_count += 1
 
@@ -328,12 +331,13 @@ class Board:
         piece = self.board[c1][r1]
 
         if not isinstance(piece, Pawn):
-            print("error")
-            return False
+            print(f"잘못된 경우 {start} -> {end}")
+            raise KeyError()
 
         if end not in piece.get_legal_moves(self):
-            # print("가능한 수 X")
-            return False
+            print(f"가능한 수 X {start} -> {end}\n"
+                  f"{str(self)}")
+            raise KeyError()
 
 
         if piece.is_promotion_line():
@@ -368,12 +372,12 @@ class Board:
 
         ## piece != None 이라는 것을 편집기한테 알려주기위해서
         if not isinstance(piece, Piece):
-            print("아무것도 없는 칸")
-            return False
+            print(f"가능한 수 X {start} -> {end}")
+            raise KeyError()
 
         if end not in piece.get_legal_moves(self):
-            print("가능한 수 X")
-            return False
+            print(f"가능한 수 X {start} -> {end}")
+            raise KeyError()
 
         ## 캐슬링 움직임 처리
         if isinstance(piece, King):
@@ -552,8 +556,10 @@ class Piece:
         return self.player
 
     def get_legal_moves(self, b: Board):
+        return [move for move in self.moves_generator(b)]
+
+    def moves_generator(self, b: Board):
         col, row = self.pos
-        legal_moves = []
 
         if isinstance(self, King) or isinstance(self, Knight):
             for direction in self.directions:
@@ -570,9 +576,9 @@ class Piece:
                     continue
 
                 if b.is_empty(new_pos):
-                    legal_moves.append(new_pos)
+                    yield new_pos
                 elif b.is_enemy(new_pos, self.player):
-                    legal_moves.append(new_pos)
+                    yield new_pos
 
         elif isinstance(self, Queen) or isinstance(self, Bishop) or isinstance(self, Rook):
             for direction in self.directions:
@@ -589,15 +595,14 @@ class Piece:
                         continue
 
                     if b.is_empty(new_pos):
-                        legal_moves.append(new_pos)
+                        yield new_pos
                         new_pos = (new_pos[0] + direction[0], new_pos[1] + direction[1])
                     elif b.is_enemy(new_pos, self.player):
-                        legal_moves.append(new_pos)
+                        yield new_pos
                         break
                     else:
                         break
 
-        return legal_moves
 
     def __str__(self):
         return f"Class Piece"
@@ -614,9 +619,13 @@ class Pawn(Piece):
         return [('q', r), ('r', r), ('n', r), ('b', r)] if is_white(self.player) else \
             [('Q', r), ('R', r), ('N', r), ('B', r)]
 
+
     def get_legal_moves(self, b: Board):
+        return [move for move in self.moves_generator(b)]
+
+    def moves_generator(self, b: Board):
         c1, r1 = self.pos
-        legal_moves = []
+
         first = self.player == Player.WHITE and c1 == 6 \
                 or self.player == Player.BLACK and c1 == 1
 
@@ -624,7 +633,7 @@ class Pawn(Piece):
             for d in range(1, 3):
                 temp = (c1 + self.directions * d, r1)
                 if b.is_empty(temp) and not b.pre_check(self.pos, temp):
-                    legal_moves.append(temp)
+                    yield temp
                 else:
                     break
 
@@ -632,9 +641,10 @@ class Pawn(Piece):
             temp = (c1 + self.directions, r1)
             if b.is_empty(temp) and not b.pre_check(self.pos, temp):
                 if self.is_promotion_line():
-                    legal_moves.extend(self._get_promotion_cases(temp[1]))
+                    for pc in self._get_promotion_cases(temp[1]):
+                        yield pc
                 else:
-                    legal_moves.append(temp)
+                    yield temp
 
         for d in [-1, 1]:
             temp = (c1 + self.directions, r1 + d)
@@ -645,16 +655,18 @@ class Pawn(Piece):
 
             if b.is_within_bounds(temp) and b.is_enemy(temp, self.player):
                 if self.is_promotion_line():
-                    legal_moves.extend(self._get_promotion_cases(temp[1]))
+                    if self.is_promotion_line():
+                        for pc in self._get_promotion_cases(temp[1]):
+                            yield pc
                 else:
-                    legal_moves.append(temp)
+                    yield temp
 
         enpassant_end = self.enpassant(b)
         if enpassant_end:
             if not b.pre_check(self.pos, enpassant_end):
-                legal_moves.append(enpassant_end)
+                yield enpassant_end
 
-        return legal_moves
+
 
     def is_promotion_line(self):
         c, r = self.pos

@@ -1,5 +1,5 @@
 from constants.config import *
-from worker.self_play_test import *
+from worker.optimize import *
 
 def main():
     pass

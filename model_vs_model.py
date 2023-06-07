@@ -27,27 +27,39 @@ def load(path="trained_model", model="model_weight.h5", config="model_config.jso
     return model
 
 
-def start(white=True):
+def start():
     env = ChessEnv()
-    player = Player.WHITE if white else Player.BLACK
-    action_label = Config().flipped_labels if white else Config().labels
-    model = load()
+    white = load()
+    black = load()
+    white_label = Config().labels
+    black_label = Config().flipped_labels
     env.reset()
+    turns = 2
 
     while not env.done:
-        env.render()
-        if player == env.turn:
-            action = input("uci => ")
-
-        else:
-            state = env.canonical_input_planes().reshape((-1, 18, 8, 8))
-            mp = model.predict(state, verbose=0)[0]
+        state = env.canonical_input_planes().reshape((-1, 18, 8, 8))
+        if env.white_to_move:
+            print("-" * 30)
+            print(turns // 2)
+            print("-" * 30)
+            mp = white.predict(state, verbose=0)[0] * env.all_legal_moves_onehot
+            mp /= mp.sum()
             action = np.argmax(mp)
-            action = action_label[action]
+            action = white_label[action]
+            print(white.predict(state, verbose=0)[1])
+        else:
+            mp = black.predict(state, verbose=0)[0] * env.all_legal_moves_onehot
+            mp /= mp.sum()
+            action = np.argmax(mp)
+            action = black_label[action]
+            print(-1 * white.predict(state, verbose=0)[1])
 
         env.step(action)
+        env.render()
 
+        turns += 1
 
+    print(env.winner)
 
 
 if __name__ == '__main__':
