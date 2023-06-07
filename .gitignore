@@ -3,4 +3,4 @@
 .DS_Store
 _test/
 
-chessenv.py
+test.py

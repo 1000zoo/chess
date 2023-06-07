@@ -106,7 +106,7 @@ class PlayConfig:
         self.max_processes = 3
         self.search_threads = 16
         self.vram_frac = 1.0
-        self.simulation_num_per_move = 200
+        self.simulation_num_per_move = 800
         self.thinking_loop = 1
         self.logging_thinking = False
         self.c_puct = 1.5
@@ -154,10 +154,10 @@ class ResourceConfig:
     """
 
     def __init__(self):
-        total_data_path = "C:/Users/cjswl/python_data/chessAI_data"
+        total_data_path = "C:/Users/cjswl/python_data/chessAI_data/"
         self.project_dir = os.path.join(total_data_path, "project")
         self.data_dir = os.path.join(total_data_path, "data")
-        self.model_dir = os.path.join(total_data_path, "models")
+        self.model_dir = os.path.join(total_data_path, "model")
 
         self.model_best_config_path = os.path.join(self.model_dir, "model_best_config.json")
         self.model_best_weight_path = os.path.join(self.model_dir, "model_best_weight.h5")

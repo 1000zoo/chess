@@ -1,5 +1,5 @@
 from constants.config import *
-from worker.optimize import *
+from worker.evaluate import *
 
 def main():
     pass

@@ -28,7 +28,7 @@ class ActionStats:
 
 class ChessPlayer:
     # dot = False
-    def __init__(self, config: Config, pipes=None, play_config=None, dummy=False):
+    def __init__(self, config: Config, pipes=None, play_config=None, dummy=False, model=None):
         self.moves = []
 
         self.tree = defaultdict(VisitStats)
@@ -42,6 +42,7 @@ class ChessPlayer:
 
         self.pipe_pool = pipes
         self.node_lock = defaultdict(Lock)
+        self.model = model
 
     def reset(self):
         self.tree = defaultdict(VisitStats)
@@ -138,6 +139,7 @@ class ChessPlayer:
         state_planes = env.canonical_input_planes()
 
         leaf_p, leaf_v = self.predict(state_planes)
+        leaf_p = leaf_p[0]
 
         if not env.white_to_move:
             leaf_p = flip_policy(leaf_p)
@@ -145,10 +147,16 @@ class ChessPlayer:
         return leaf_p, leaf_v
 
     def predict(self, state_planes):
-        pipe = self.pipe_pool.pop()
-        pipe.send(state_planes)
-        ret = pipe.recv()
-        self.pipe_pool.append(pipe)
+        if self.pipe_pool is not None:
+            pipe = self.pipe_pool.pop()
+            pipe.send(state_planes)
+            ret = pipe.recv()
+            self.pipe_pool.append(pipe)
+
+        else:
+            state = state_planes.reshape((-1, 18, 8, 8))
+            ret = self.model.predict(state, verbose=0)
+
         return ret
 
 

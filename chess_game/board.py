@@ -266,7 +266,10 @@ class Board:
 
 
     def push_uci(self, action):
-        start, end = self.uci_to_coor(action)
+        try:
+            start, end = self.uci_to_coor(action)
+        except:
+            raise ValueError()
         return self.move(start, end)
 
 

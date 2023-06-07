@@ -9,12 +9,13 @@ from chess_game.board import *
 from constants.config import *
 from constants.constant import Player, Done
 from env.chess_env import ChessEnv
+from agent.player_chess import ChessPlayer
 from agent.model_chess import ChessModel
 
 
 
 
-def load(path="trained_model", model="model_weight.h5", config="model_config.json"):
+def load(path="trained_model", model="model_best_weight.h5", config="model_best_config.json"):
     model_path = os.path.join(path, model)
     config_path = os.path.join(path, config)
 
@@ -27,25 +28,38 @@ def load(path="trained_model", model="model_weight.h5", config="model_config.jso
     return model
 
 
-def start(white=True):
+def start(white=False):
     env = ChessEnv()
     player = Player.WHITE if white else Player.BLACK
-    action_label = Config().flipped_labels if white else Config().labels
     model = load()
+    computer = ChessPlayer(Config(), model=model)
+    action_label = Config().flipped_labels if white else Config().labels
+
     env.reset()
 
     while not env.done:
         env.render()
         if player == env.turn:
-            action = input("uci => ")
+            try:
+                action = input("uci => ")
+            except KeyError as err:
+                print(err)
+                continue
+            except ValueError as err:
+                print(err)
+                continue
 
         else:
-            state = env.canonical_input_planes().reshape((-1, 18, 8, 8))
-            mp = model.predict(state, verbose=0)[0]
-            action = np.argmax(mp)
-            action = action_label[action]
+            action = computer.action(env)
 
-        env.step(action)
+        try:
+            env.step(action)
+        except KeyError as err:
+            print(err)
+            continue
+        except ValueError as err:
+            print(err)
+            continue
 
 
 

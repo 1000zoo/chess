@@ -22,12 +22,13 @@ from keras.callbacks import TensorBoard
 logger = getLogger(__name__)
 
 
+
+
 def start(config: Config):
     """
     Helper method which just kicks off the optimization using the specified config
     :param Config config: config to use
     """
-    os.putenv("TF_GPU_ALLOCATOR", "cuda_malloc_async")
     return OptimizeWorker(config).start()
 
 
@@ -66,7 +67,7 @@ class OptimizeWorker:
         shuffle(self.filenames)
         total_steps = self.config.trainer.start_total_steps
 
-        while total_steps <= 1000:
+        while True:
             self.fill_queue()
             steps = self.train_epoch(self.config.trainer.epoch_to_checkpoint)
             total_steps += steps
@@ -159,8 +160,8 @@ class OptimizeWorker:
         dirs = get_next_generation_model_dirs(rc)
         if not dirs:
             logger.debug("loading best model")
-            model.build()
-
+            if not load_best_model_weight(model):
+                raise RuntimeError("Best model can not loaded!")
         else:
             latest_dir = dirs[-1]
             logger.debug("loading latest model")

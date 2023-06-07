@@ -51,7 +51,6 @@ def write_game_data_to_file(path, data):
     except Exception as e:
         print(e)
 
-
 def read_game_data_from_file(path):
     try:
         with open(path, "rt") as f:

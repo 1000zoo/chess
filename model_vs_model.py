@@ -9,12 +9,13 @@ from chess_game.board import *
 from constants.config import *
 from constants.constant import Player, Done
 from env.chess_env import ChessEnv
+from agent.player_chess import ChessPlayer
 from agent.model_chess import ChessModel
 
 
 
 
-def load(path="trained_model", model="model_weight.h5", config="model_config.json"):
+def load(path="trained_model", model="model_best_weight.h5", config="model_best_config.json"):
     model_path = os.path.join(path, model)
     config_path = os.path.join(path, config)
 
@@ -27,37 +28,30 @@ def load(path="trained_model", model="model_weight.h5", config="model_config.jso
     return model
 
 
-def start():
+def start(white=False):
     env = ChessEnv()
-    white = load()
-    black = load()
+    player = Player.WHITE if white else Player.BLACK
+    mw = load()
+    mb = load(model="model_weight.h5", config="model_config.json")
+    white = ChessPlayer(Config(), model=mw)
+    black = ChessPlayer(Config(), model=mb)
+
     white_label = Config().labels
     black_label = Config().flipped_labels
+
     env.reset()
-    turns = 2
 
     while not env.done:
-        state = env.canonical_input_planes().reshape((-1, 18, 8, 8))
-        if env.white_to_move:
-            print("-" * 30)
-            print(turns // 2)
-            print("-" * 30)
-            mp = white.predict(state, verbose=0)[0] * env.all_legal_moves_onehot
-            mp /= mp.sum()
-            action = np.argmax(mp)
-            action = white_label[action]
-            print(white.predict(state, verbose=0)[1])
+        print(env.num_halfmoves)
+        print(env.fen)
+        env.render()
+        if player == env.turn:
+            action = white.action(env)
+
         else:
-            mp = black.predict(state, verbose=0)[0] * env.all_legal_moves_onehot
-            mp /= mp.sum()
-            action = np.argmax(mp)
-            action = black_label[action]
-            print(-1 * white.predict(state, verbose=0)[1])
+            action = black.action(env)
 
         env.step(action)
-        env.render()
-
-        turns += 1
 
     print(env.winner)
 
